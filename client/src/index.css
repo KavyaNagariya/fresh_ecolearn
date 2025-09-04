@@ -94,55 +94,41 @@
   }
 
   .floating-animation {
-    animation: float 3s ease-in-out infinite;
+    animation: float 6s ease-in-out infinite;
   }
 
   .pulse-grow {
-    animation: pulse-grow 2s ease-in-out infinite;
+    animation: pulse-grow 4s ease-in-out infinite;
   }
 
   .slide-up {
-    animation: slideUp 0.6s ease-out;
+    animation: slideUp 0.8s ease-out;
   }
 
   .slide-up-delayed {
-    animation: slideUp 0.8s ease-out 0.2s both;
+    animation: slideUp 1s ease-out 0.3s both;
   }
 
   .fade-in-left {
-    animation: fadeInLeft 0.8s ease-out;
+    animation: fadeInLeft 1s ease-out;
   }
 
   .fade-in-right {
-    animation: fadeInRight 0.8s ease-out;
+    animation: fadeInRight 1s ease-out;
   }
 
   .scale-in {
-    animation: scaleIn 0.6s ease-out;
-  }
-
-  .rotate-in {
-    animation: rotateIn 0.8s ease-out;
-  }
-
-  .glow-pulse {
-    animation: glowPulse 2s ease-in-out infinite alternate;
+    animation: scaleIn 0.8s ease-out;
   }
 
   .eco-card {
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    transform-style: preserve-3d;
+    transition: all 0.3s ease;
   }
 
   .eco-card:hover {
-    transform: translateY(-12px) scale(1.03) rotateX(5deg);
-    box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.15), 
-                0 20px 30px -10px rgba(16, 185, 129, 0.1),
-                0 0 40px rgba(16, 185, 129, 0.05);
-  }
-
-  .badge-animation {
-    animation: badgeGlow 2s ease-in-out infinite alternate;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(76, 175, 80, 0.1), 
+                0 8px 16px -6px rgba(76, 175, 80, 0.05);
   }
 
   .nav-mobile {
@@ -176,50 +162,12 @@
     animation: bounce 2s infinite;
   }
 
-  .wiggle {
-    animation: wiggle 1s ease-in-out infinite;
+  .simple-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   }
 
-  .sparkle {
-    animation: sparkle 1.5s ease-in-out infinite alternate;
-  }
-
-  .text-shimmer {
-    background: linear-gradient(
-      90deg,
-      var(--primary) 0%,
-      var(--accent) 45%,
-      var(--secondary) 55%,
-      var(--primary) 100%
-    );
-    background-size: 200% 100%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 3s ease-in-out infinite;
-  }
-
-  .gradient-border {
-    position: relative;
-    background: var(--card);
-    border-radius: 1rem;
-  }
-
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    padding: 2px;
-    background: linear-gradient(45deg, var(--primary), var(--accent), var(--secondary), var(--primary));
-    border-radius: inherit;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-  }
-
-  .morphing-gradient {
-    background: linear-gradient(-45deg, var(--primary), var(--accent), var(--secondary), var(--primary));
-    background-size: 400% 400%;
-    animation: morphGradient 4s ease infinite;
+  .subtle-border {
+    border: 1px solid var(--border);
   }
 }
 
@@ -270,35 +218,4 @@
   100% { opacity: 1; transform: rotate(0deg) scale(1); }
 }
 
-@keyframes glowPulse {
-  0% { 
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-    transform: scale(1);
-  }
-  100% { 
-    box-shadow: 0 0 40px rgba(16, 185, 129, 0.6), 0 0 60px rgba(16, 185, 129, 0.4);
-    transform: scale(1.02);
-  }
-}
-
-@keyframes wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-3deg); }
-  75% { transform: rotate(3deg); }
-}
-
-@keyframes sparkle {
-  0% { opacity: 0.7; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.1); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes morphGradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
+/* Removed flashy animations for a calmer experience */

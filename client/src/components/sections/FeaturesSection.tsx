@@ -50,18 +50,16 @@ export function FeaturesSection() {
   return (
     <section id="features" className="py-20 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Enhanced Section Header */}
-        <div className="text-center mb-16 slide-up">
-          <div className="inline-flex items-center space-x-2 bg-primary/10 px-4 py-2 rounded-full mb-6 scale-in">
-            <div className="w-3 h-3 bg-primary rounded-full sparkle"></div>
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center space-x-2 bg-primary/10 px-4 py-2 rounded-full mb-6">
+            <div className="w-3 h-3 bg-primary rounded-full"></div>
             <span className="text-primary font-medium text-sm">Platform Features</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 slide-up-delayed">
-            <span className="text-shimmer">
-              Revolutionary Features
-            </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6 text-foreground">
+            Revolutionary Features
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto fade-in-left" style={{animationDelay: "0.4s"}}>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Transform environmental education through engaging gameplay, real-world challenges, and collaborative learning experiences.
           </p>
         </div>
@@ -70,16 +68,14 @@ export function FeaturesSection() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => {
             const Icon = feature.icon;
-            const animationClass = index % 3 === 0 ? 'fade-in-left' : index % 3 === 1 ? 'slide-up' : 'fade-in-right';
-            const animationDelay = `${(index * 0.1)}s`;
             
             return (
-              <div key={index} className={`eco-card bg-card rounded-2xl p-8 shadow-lg border border-border ${animationClass}`} style={{animationDelay}}>
-                <div className={`w-16 h-16 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-6 glow-pulse`}>
-                  <Icon className="w-8 h-8 text-white sparkle" />
+              <div key={index} className="eco-card bg-card rounded-xl p-6 shadow-sm border border-border">
+                <div className={`w-12 h-12 bg-gradient-to-r ${feature.gradient} rounded-lg flex items-center justify-center mb-4`}>
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-4">{feature.title}</h3>
-                <p className="text-muted-foreground mb-6">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-3">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm mb-4">{feature.description}</p>
                 
                 {/* Feature-specific content */}
                 {feature.action && !feature.badges && (
@@ -170,56 +166,56 @@ export function FeaturesSection() {
           })}
         </div>
 
-        {/* Enhanced Demo Screenshots Section */}
-        <div className="morphing-gradient rounded-3xl p-8 md:p-12 scale-in" style={{animationDelay: "0.8s"}}>
-          <div className="text-center mb-12 slide-up">
-            <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">See EcoLearn in Action</h3>
-            <p className="text-white/90">Experience the platform through our interactive demo interface</p>
+        {/* Demo Screenshots Section */}
+        <div className="bg-card border border-border rounded-2xl p-8 md:p-12">
+          <div className="text-center mb-12">
+            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">See EcoLearn in Action</h3>
+            <p className="text-muted-foreground">Experience the platform through our interactive demo interface</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Lesson Module Demo */}
-            <div className="bg-card rounded-2xl shadow-xl overflow-hidden eco-card fade-in-left" style={{animationDelay: "1s"}}>
-              <div className="p-4 morphing-gradient">
-                <h4 className="font-semibold text-white text-sm sparkle">Interactive Lesson Module</h4>
+            <div className="bg-background rounded-xl shadow-sm overflow-hidden border border-border">
+              <div className="p-3 bg-primary">
+                <h4 className="font-medium text-white text-sm">Interactive Lesson Module</h4>
               </div>
               <img 
                 src="https://pixabay.com/get/g9433fe3833c77ba337928673e1feab47e04fe36ffd7d66b3b07848332446c06dc904edc36a7284365be38308303b56f6c0bcd5966de8f66b72eeeb179241f0bc_1280.jpg" 
                 alt="Interactive environmental education lesson interface on tablet" 
-                className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500" 
+                className="w-full h-40 object-cover" 
               />
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Engaging multimedia lessons with progress tracking and instant feedback</p>
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground">Engaging multimedia lessons with progress tracking and instant feedback</p>
               </div>
             </div>
 
             {/* Badge Collection Demo */}
-            <div className="bg-card rounded-2xl shadow-xl overflow-hidden eco-card slide-up" style={{animationDelay: "1.2s"}}>
-              <div className="p-4 bg-gradient-to-r from-yellow-400 to-orange-500 glow-pulse">
-                <h4 className="font-semibold text-white text-sm wiggle">Achievement System</h4>
+            <div className="bg-background rounded-xl shadow-sm overflow-hidden border border-border">
+              <div className="p-3 bg-accent">
+                <h4 className="font-medium text-white text-sm">Achievement System</h4>
               </div>
               <img 
                 src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
                 alt="Digital achievement badges and rewards interface design" 
-                className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500" 
+                className="w-full h-40 object-cover" 
               />
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Digital badges, eco-points, and achievement celebrations</p>
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground">Digital badges, eco-points, and achievement celebrations</p>
               </div>
             </div>
 
             {/* Leaderboard Demo */}
-            <div className="bg-card rounded-2xl shadow-xl overflow-hidden eco-card fade-in-right" style={{animationDelay: "1.4s"}}>
-              <div className="p-4 bg-gradient-to-r from-purple-500 to-indigo-500 sparkle">
-                <h4 className="font-semibold text-white text-sm rotate-in">Live Leaderboard</h4>
+            <div className="bg-background rounded-xl shadow-sm overflow-hidden border border-border">
+              <div className="p-3 bg-secondary">
+                <h4 className="font-medium text-white text-sm">Live Leaderboard</h4>
               </div>
               <img 
                 src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
                 alt="Competitive leaderboard interface showing school rankings" 
-                className="w-full h-48 object-cover hover:scale-110 transition-transform duration-500" 
+                className="w-full h-40 object-cover" 
               />
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">Real-time school rankings and competitive challenges</p>
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground">Real-time school rankings and competitive challenges</p>
               </div>
             </div>
           </div>
