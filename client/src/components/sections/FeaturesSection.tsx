@@ -173,7 +173,7 @@ export function FeaturesSection() {
         {/* Enhanced Demo Screenshots Section */}
         <div className="morphing-gradient rounded-3xl p-8 md:p-12 scale-in" style={{animationDelay: "0.8s"}}>
           <div className="text-center mb-12 slide-up">
-            <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 text-shimmer">See EcoLearn in Action</h3>
+            <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">See EcoLearn in Action</h3>
             <p className="text-white/90">Experience the platform through our interactive demo interface</p>
           </div>
 
