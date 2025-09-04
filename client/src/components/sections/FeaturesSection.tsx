@@ -78,7 +78,7 @@ export function FeaturesSection() {
                 <div className={`w-16 h-16 bg-gradient-to-r ${feature.gradient} rounded-xl flex items-center justify-center mb-6 glow-pulse`}>
                   <Icon className="w-8 h-8 text-white sparkle" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-4 wiggle" style={{animationDelay: `${0.5 + index * 0.1}s`}}>{feature.title}</h3>
+                <h3 className="text-xl font-bold text-foreground mb-4">{feature.title}</h3>
                 <p className="text-muted-foreground mb-6">{feature.description}</p>
                 
                 {/* Feature-specific content */}
