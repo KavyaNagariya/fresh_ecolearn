@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigation } from "@/hooks/useNavigation";
 import { cn } from "@/lib/utils";
+import { Link } from "wouter";
 
 export function Header() {
   const { isMobileMenuOpen, toggleMobileMenu, scrollToSection } = useNavigation();
@@ -44,12 +45,16 @@ export function Header() {
             >
               About
             </button>
-            <Button 
-              className="bg-gradient-to-r from-primary to-accent text-white px-6 py-2 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-200 font-medium"
-              data-testid="button-signup"
-            >
-              Sign Up
-            </Button>
+            <Link href="/signup">
+  <Button className="ml-2 bg-green-600 text-white hover:bg-green-700">
+    Sign Up
+  </Button>
+</Link>
+<Link href="/signin">
+  <Button className="ml-2 bg-blue-600 text-white hover:bg-blue-700">
+    Sign In
+  </Button>
+</Link>
           </div>
 
           {/* Mobile Menu Button */}
