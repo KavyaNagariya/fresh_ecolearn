@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Zap, Lightbulb, Sparkles } from "lucide-react";
+import { Link } from "wouter";
 
 export function HeroSection() {
   return (
@@ -26,17 +27,25 @@ export function HeroSection() {
               Motivate students to adopt eco-friendly habits through interactive lessons, real-world challenges, and school competitions.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors duration-200 flex items-center justify-center space-x-2"
-                data-testid="button-get-started"
-              >
-                <Zap className="w-5 h-5" />
-                <span>Get Started</span>
-              </Button>
+              <Link href="/signup">
+                <Button 
+                  className="bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors duration-200 flex items-center justify-center space-x-2"
+                  data-testid="button-get-started"
+                >
+                  <Zap className="w-5 h-5" />
+                  <span>Get Started</span>
+                </Button>
+              </Link>
               <Button 
                 variant="outline"
                 className="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors duration-200 flex items-center justify-center space-x-2"
                 data-testid="button-learn-more"
+                onClick={() => {
+                  const featuresSection = document.getElementById('features');
+                  if (featuresSection) {
+                    featuresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
+                }}
               >
                 <Lightbulb className="w-5 h-5" />
                 <span>Learn More</span>
@@ -48,10 +57,22 @@ export function HeroSection() {
           <div className="relative">
             <div className="relative rounded-xl overflow-hidden shadow-lg">
               <img 
-                src="https://images.unsplash.com/photo-1509062522246-3755977927d7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" 
+                src="/imagestobeused/heroforsite.jpg" 
                 alt="Students engaging in environmental education with digital technology" 
-                className="w-full h-auto rounded-xl" 
+                className="w-full h-auto rounded-xl"
+                onError={(e) => {
+                  // Fallback to a solid color background if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <div className="hidden w-full h-64 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-2">🌱</div>
+                  <div className="text-sm">Environmental Education Platform</div>
+                </div>
+              </div>
               
               {/* Simple Gamification Elements */}
               <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">

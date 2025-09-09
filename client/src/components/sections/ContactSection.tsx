@@ -1,6 +1,7 @@
 import { ContactForm } from "@/components/ui/ContactForm";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
+import { Link } from "wouter";
 
 export function ContactSection() {
   return (
@@ -23,10 +24,22 @@ export function ContactSection() {
             {/* Contact Info & Visual */}
             <div className="space-y-8">
               <img 
-                src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&h=400" 
+                src="/imagestobeused/contactforsite.jpg" 
                 alt="Students and teachers collaborating on environmental sustainability projects" 
-                className="rounded-2xl shadow-lg w-full h-auto" 
+                className="rounded-2xl shadow-lg w-full h-auto"
+                onError={(e) => {
+                  // Fallback to a solid color background if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <div className="hidden rounded-2xl shadow-lg w-full h-64 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-4xl mb-2">🌍</div>
+                  <div className="text-sm">Environmental Collaboration</div>
+                </div>
+              </div>
 
               {/* Contact Information */}
               <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-6">
@@ -65,12 +78,14 @@ export function ContactSection() {
               <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
                 Join thousands of students and educators who are already making a difference through gamified environmental education.
               </p>
-              <Button 
-                className="bg-white text-primary px-8 py-4 rounded-full font-semibold hover:bg-gray-50 hover:scale-105 transition-all duration-300 text-lg"
-                data-testid="button-join-ecolearn"
-              >
-                Join EcoLearn Today
-              </Button>
+              <Link href="/signup">
+                <Button 
+                  className="bg-white text-primary px-8 py-4 rounded-full font-semibold hover:bg-gray-50 hover:scale-105 transition-all duration-300 text-lg"
+                  data-testid="button-join-ecolearn"
+                >
+                  Join EcoLearn Today
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

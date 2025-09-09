@@ -1,0 +1,12 @@
+# Image Placeholder Directory
+
+This directory contains placeholder images for the EcoLearn project.
+
+Required images:
+- tablet.jpg - For interactive lesson module demo
+- achievement.jpg - For achievement system demo  
+- leaderboard.jpg - For leaderboard demo
+- hero-image.jpg - For hero section
+- contact-image.jpg - For contact section
+
+Note: Replace these with actual images when available.

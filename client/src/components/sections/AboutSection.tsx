@@ -43,10 +43,22 @@ export function AboutSection() {
           {/* Enhanced About Image */}
           <div className="relative fade-in-right">
             <img 
-              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=600&h=500" 
+              src="/imagestobeused/sustain.jpg" 
               alt="Diverse group of students collaborating on environmental sustainability project" 
-              className="rounded-2xl shadow-2xl w-full h-auto eco-card" 
+              className="rounded-2xl shadow-2xl w-full h-auto eco-card"
+              onError={(e) => {
+                // Fallback to a solid color background if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                target.nextElementSibling?.classList.remove('hidden');
+              }}
             />
+            <div className="hidden rounded-2xl shadow-2xl w-full h-80 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <div className="text-4xl mb-2">🌱</div>
+                <div className="text-sm">Environmental Education Mission</div>
+              </div>
+            </div>
             
             {/* Overlay Elements */}
             <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent rounded-2xl"></div>

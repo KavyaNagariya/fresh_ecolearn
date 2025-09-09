@@ -1,4 +1,5 @@
 import { Lightbulb, Star, Camera, BarChart3, Globe, Users } from "lucide-react";
+import { Link } from "wouter";
 
 export function FeaturesSection() {
   const features = [
@@ -79,12 +80,14 @@ export function FeaturesSection() {
                 
                 {/* Feature-specific content */}
                 {feature.action && !feature.badges && (
-                  <div className="flex items-center text-sm text-primary font-medium">
-                    <span>{feature.action}</span>
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </div>
+                  <Link href={feature.title === "Interactive Lessons & Quizzes" ? "/signup" : "#"}>
+                    <div className="flex items-center text-sm text-primary font-medium cursor-pointer hover:text-primary/80 transition-colors">
+                      <span>{feature.action}</span>
+                      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </div>
+                  </Link>
                 )}
                 
                 {feature.badges && (
@@ -180,10 +183,21 @@ export function FeaturesSection() {
                 <h4 className="font-medium text-white text-sm">Interactive Lesson Module</h4>
               </div>
               <img 
-                src="https://pixabay.com/get/g9433fe3833c77ba337928673e1feab47e04fe36ffd7d66b3b07848332446c06dc904edc36a7284365be38308303b56f6c0bcd5966de8f66b72eeeb179241f0bc_1280.jpg" 
+                src="/imagestobeused/tabletforlearningmodule.jpg" 
                 alt="Interactive environmental education lesson interface on tablet" 
-                className="w-full h-40 object-cover" 
+                className="w-full h-40 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <div className="hidden w-full h-40 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-2xl mb-1">📊</div>
+                  <div className="text-xs">Interactive Lessons</div>
+                </div>
+              </div>
               <div className="p-3">
                 <p className="text-xs text-muted-foreground">Engaging multimedia lessons with progress tracking and instant feedback</p>
               </div>
@@ -195,10 +209,21 @@ export function FeaturesSection() {
                 <h4 className="font-medium text-white text-sm">Achievement System</h4>
               </div>
               <img 
-                src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                src="/imagestobeused/achievementforsite.jpg" 
                 alt="Digital achievement badges and rewards interface design" 
-                className="w-full h-40 object-cover" 
+                className="w-full h-40 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <div className="hidden w-full h-40 bg-gradient-to-br from-accent/10 to-secondary/10 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-2xl mb-1">🏆</div>
+                  <div className="text-xs">Digital Badges</div>
+                </div>
+              </div>
               <div className="p-3">
                 <p className="text-xs text-muted-foreground">Digital badges, eco-points, and achievement celebrations</p>
               </div>
@@ -210,10 +235,21 @@ export function FeaturesSection() {
                 <h4 className="font-medium text-white text-sm">Live Leaderboard</h4>
               </div>
               <img 
-                src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&h=300" 
+                src="/imagestobeused/leaderboardforsite.jpeg" 
                 alt="Competitive leaderboard interface showing school rankings" 
-                className="w-full h-40 object-cover" 
+                className="w-full h-40 object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
               />
+              <div className="hidden w-full h-40 bg-gradient-to-br from-secondary/10 to-purple/10 flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  <div className="text-2xl mb-1">🏅</div>
+                  <div className="text-xs">Live Rankings</div>
+                </div>
+              </div>
               <div className="p-3">
                 <p className="text-xs text-muted-foreground">Real-time school rankings and competitive challenges</p>
               </div>

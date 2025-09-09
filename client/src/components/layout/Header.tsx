@@ -111,13 +111,16 @@ export function Header() {
               <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 hover:opacity-20 rounded-lg -z-10 transition-opacity duration-300"></div>
             </span>
           </button>
-          <Button 
-            className="morphing-gradient text-white px-12 py-4 rounded-full text-2xl font-bold hover:shadow-2xl hover:scale-110 transition-all duration-300 glow-pulse slide-up"
-            style={{animationDelay: "0.3s"}}
-            data-testid="mobile-button-signup"
-          >
-            Sign Up
-          </Button>
+          <Link href="/signup">
+            <Button 
+              className="morphing-gradient text-white px-12 py-4 rounded-full text-2xl font-bold hover:shadow-2xl hover:scale-110 transition-all duration-300 glow-pulse slide-up"
+              style={{animationDelay: "0.3s"}}
+              data-testid="mobile-button-signup"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Sign Up
+            </Button>
+          </Link>
           
           {/* Close button for mobile menu */}
           <button
