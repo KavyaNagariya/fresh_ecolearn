@@ -345,9 +345,15 @@ function createStorage(): IStorage {
 
   if (useDatabase && databaseUrl) {
     console.log('🗄️ Using PostgreSQL database storage');
+    console.log('📍 Connected to:', databaseUrl.split('@')[1]?.split('/')[0] || 'database');
     return new PostgreSQLStorage(databaseUrl);
   } else {
-    console.log('🧠 Using in-memory storage (data will be lost on restart)');
+    console.log('⚠️  WARNING: Using in-memory storage (data will be lost on restart)');
+    console.log('🔧 To use shared database:');
+    console.log('   1. Copy .env.example to .env');
+    console.log('   2. Update DATABASE_URL with the correct NeonDB connection string');
+    console.log('   3. Set USE_DATABASE=true');
+    console.log('   4. Restart the server with npm run dev');
     return new MemStorage();
   }
 }

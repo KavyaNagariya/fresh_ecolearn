@@ -6,6 +6,35 @@ import { setupVite, serveStatic, log } from "./vite";
 // Load environment variables first
 config();
 
+// Validate environment configuration
+function validateEnvironment() {
+  const requiredForDatabase = ['DATABASE_URL', 'USE_DATABASE'];
+  const missing = [];
+  
+  for (const key of requiredForDatabase) {
+    if (!process.env[key]) {
+      missing.push(key);
+    }
+  }
+  
+  if (missing.length > 0) {
+    console.log('\n⚠️  Environment Configuration Warning:');
+    console.log(`Missing environment variables: ${missing.join(', ')}`);
+    console.log('\n🔧 Setup Instructions:');
+    console.log('   1. Copy .env.example to .env');
+    console.log('   2. Update the DATABASE_URL with correct NeonDB connection string');
+    console.log('   3. Restart the server');
+    console.log('\n📝 See SETUP.md for detailed instructions\n');
+  }
+  
+  if (process.env.USE_DATABASE === 'true' && process.env.DATABASE_URL) {
+    const dbHost = process.env.DATABASE_URL.split('@')[1]?.split('/')[0];
+    console.log(`🌍 Database Host: ${dbHost}`);
+  }
+}
+
+validateEnvironment();
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
