@@ -3,6 +3,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { useLocation } from 'wouter';
 
+// Safe localStorage setter with JSON stringification
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    localStorage.setItem(key, stringValue);
+  } catch (error) {
+    console.warn('Failed to set localStorage item:', key, error);
+  }
+};
+
 export default function ProfileSetupPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
@@ -12,6 +22,7 @@ export default function ProfileSetupPage() {
     email: user?.email || '',
     schoolName: '',
     grade: '',
+    class: '',
     studentId: '',
   });
   
@@ -148,7 +159,7 @@ export default function ProfileSetupPage() {
 
             <div>
               <label htmlFor="grade" className="block text-sm font-medium text-gray-700">
-                Grade/Class *
+                Grade/Year *
               </label>
               <select
                 id="grade"
@@ -172,6 +183,22 @@ export default function ProfileSetupPage() {
                 <option value="Grade 11">Grade 11</option>
                 <option value="Grade 12">Grade 12</option>
               </select>
+            </div>
+
+            <div>
+              <label htmlFor="class" className="block text-sm font-medium text-gray-700">
+                Class/Section
+              </label>
+              <input
+                type="text"
+                id="class"
+                name="class"
+                value={formData.class}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-green-500"
+                placeholder="Enter your class/section (e.g., A, B, Science, Commerce)"
+              />
+              <p className="mt-1 text-xs text-gray-500">Optional: Specify your class section or stream</p>
             </div>
 
             <div>

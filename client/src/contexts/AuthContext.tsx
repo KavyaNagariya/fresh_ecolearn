@@ -3,6 +3,16 @@ import { User, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useLocation } from 'wouter';
 
+// Safe localStorage setter with JSON stringification
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    localStorage.setItem(key, stringValue);
+  } catch (error) {
+    console.warn('Failed to set localStorage item:', key, error);
+  }
+};
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -64,7 +74,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const ensureUserInDatabase = async (user: User) => {
     try {
-      // Create user in PostgreSQL with Firebase UID as password
+      // For Google sign-ins, we can use UID as password since we don't have the actual password
+      // For email/password sign-ins, we should not store passwords in our database
+      const isGoogleSignIn = user.providerData.some(provider => provider.providerId === 'google.com');
+      
       const response = await fetch('/api/auth/ensure-user', {
         method: 'POST',
         headers: {
@@ -73,7 +86,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         body: JSON.stringify({
           userId: user.uid,
           username: user.email || user.uid,
-          password: user.uid, // Use Firebase UID as password
+          password: isGoogleSignIn ? user.uid : 'firebase_auth', // Use UID only for Google sign-ins
+          authProvider: isGoogleSignIn ? 'google' : 'email'
         }),
       });
       
@@ -88,11 +102,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     try {
       await signOut(auth);
-      // Clear any user-specific data from localStorage
+      // Clear ALL user-specific data from localStorage
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('ecolearn_')) {
+        if (key && (key.startsWith('ecolearn_') || 
+                   key.startsWith('lesson_progress_') || 
+                   key.startsWith('quiz_result_') ||
+                   key.startsWith('unlocked_modules_'))) {
           keysToRemove.push(key);
         }
       }
@@ -115,8 +132,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (hasProfile && profile) {
           // User has a profile, redirect to dashboard
           console.log('User has profile, redirecting to dashboard');
-          // Store profile data in localStorage with user-specific key
-          localStorage.setItem(`ecolearn_profile_${user.uid}`, JSON.stringify(profile));
+          // Store profile data in localStorage with user-specific key safely
+          safeSetLocalStorage(`ecolearn_profile_${user.uid}`, profile);
           setLocation('/dashboard');
         } else {
           // User doesn't have a profile, redirect to profile setup

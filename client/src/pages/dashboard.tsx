@@ -15,12 +15,47 @@ interface StudentProfile {
   email: string;
   schoolName: string;
   grade: string;
+  class?: string;
   studentId?: string;
   ecoPoints: number;
   currentLevel: number;
   createdAt: string;
   updatedAt: string;
 }
+
+// Safe JSON parsing utility to prevent console errors
+const safeJSONParse = (str: string | null, defaultValue: any = null) => {
+  if (!str) return defaultValue;
+  try {
+    // If it's already an object, return it
+    if (typeof str === 'object') return str;
+    return JSON.parse(str);
+  } catch (error) {
+    console.warn('Failed to parse JSON:', str, error);
+    return defaultValue;
+  }
+};
+
+// Safe localStorage getter with JSON parsing
+const safeGetLocalStorage = (key: string, defaultValue: any = null) => {
+  try {
+    const item = localStorage.getItem(key);
+    return safeJSONParse(item, defaultValue);
+  } catch (error) {
+    console.warn('Failed to get localStorage item:', key, error);
+    return defaultValue;
+  }
+};
+
+// Safe localStorage setter with JSON stringification
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    localStorage.setItem(key, stringValue);
+  } catch (error) {
+    console.warn('Failed to set localStorage item:', key, error);
+  }
+};
 
 export default function DashboardPage() {
   const { user, logout, loading: authLoading } = useAuth();
@@ -32,34 +67,167 @@ export default function DashboardPage() {
   const [unlockedModules, setUnlockedModules] = useState<string[]>(['module-1']);
   const [quizResults, setQuizResults] = useState<{ [key: string]: any }>({});
 
-  // Check lesson completion for each module
-  const checkModuleCompletion = () => {
-    const progress: { [key: string]: number } = {};
-    const quizData: { [key: string]: any } = {};
+  // Check lesson completion for each module from database
+  const checkModuleCompletion = async () => {
+    if (!user) return;
     
-    // Check all modules completion
-    ['module-1', 'module-2', 'module-3'].forEach(moduleId => {
-      const moduleProgress = localStorage.getItem(`lesson_progress_${moduleId}`);
-      if (moduleProgress) {
-        const completedSections = JSON.parse(moduleProgress);
-        progress[moduleId] = completedSections.length;
+    try {
+      // Get module progress from database
+      const progressResponse = await fetch(`/api/module-progress/${user.uid}`);
+      const quizResponse = await fetch(`/api/quiz-results/${user.uid}`);
+      
+      const progress: { [key: string]: number } = {};
+      const quizData: { [key: string]: any } = {};
+      let calculatedUnlockedModules = ["module-1"]; // Always unlock module 1
+      
+      if (progressResponse.ok) {
+        const { progress: moduleProgresses } = await progressResponse.json();
+        // Convert database format to current format
+        moduleProgresses.forEach((mp: any) => {
+          const completedSections = safeJSONParse(mp.completedSections, []);
+          progress[mp.moduleId] = completedSections.length;
+        });
       } else {
-        progress[moduleId] = 0;
+        // Fallback to localStorage if database is not available
+        ['module-1', 'module-2', 'module-3', 'module-4', 'module-5'].forEach(moduleId => {
+          const moduleProgress = safeGetLocalStorage(`lesson_progress_${user.uid}_${moduleId}`, []);
+          progress[moduleId] = moduleProgress.length;
+        });
       }
       
-      // Check quiz results
-      const quizResult = localStorage.getItem(`quiz_result_${moduleId}`);
-      if (quizResult) {
-        quizData[moduleId] = JSON.parse(quizResult);
+      if (quizResponse.ok) {
+        const { results: quizResults } = await quizResponse.json();
+        // Convert to current format
+        quizResults.forEach((qr: any) => {
+          quizData[qr.moduleId] = {
+            score: qr.score,
+            totalPoints: qr.totalPoints,
+            passed: qr.passed,
+            attempts: safeJSONParse(qr.attempts, []),
+            completedAt: qr.completedAt,
+            timeTaken: qr.timeTaken
+          };
+        });
+        
+        // Calculate unlocked modules based on quiz completion
+        // Module 2 unlocks when Module 1 quiz is passed
+        if (quizData['module-1'] && quizData['module-1'].passed) {
+          calculatedUnlockedModules.push('module-2');
+        }
+        // Module 3 unlocks when Module 2 quiz is passed
+        if (quizData['module-2'] && quizData['module-2'].passed) {
+          calculatedUnlockedModules.push('module-3');
+        }
+        // Module 4 unlocks when Module 3 quiz is passed
+        if (quizData['module-3'] && quizData['module-3'].passed) {
+          calculatedUnlockedModules.push('module-4');
+        }
+        // Module 5 unlocks when Module 4 quiz is passed
+        if (quizData['module-4'] && quizData['module-4'].passed) {
+          calculatedUnlockedModules.push('module-5');
+        }
+      } else {
+        // Fallback to localStorage
+        ['module-1', 'module-2', 'module-3', 'module-4', 'module-5'].forEach(moduleId => {
+          const quizResult = safeGetLocalStorage(`quiz_result_${user.uid}_${moduleId}`, null);
+          if (quizResult) {
+            quizData[moduleId] = quizResult;
+            
+            // Calculate unlocked modules from localStorage
+            if (moduleId === 'module-1' && quizResult.passed) {
+              if (!calculatedUnlockedModules.includes('module-2')) {
+                calculatedUnlockedModules.push('module-2');
+              }
+            }
+            if (moduleId === 'module-2' && quizResult.passed) {
+              if (!calculatedUnlockedModules.includes('module-3')) {
+                calculatedUnlockedModules.push('module-3');
+              }
+            }
+            if (moduleId === 'module-3' && quizResult.passed) {
+              if (!calculatedUnlockedModules.includes('module-4')) {
+                calculatedUnlockedModules.push('module-4');
+              }
+            }
+            if (moduleId === 'module-4' && quizResult.passed) {
+              if (!calculatedUnlockedModules.includes('module-5')) {
+                calculatedUnlockedModules.push('module-5');
+              }
+            }
+          }
+        });
       }
-    });
-    
-    setModuleProgress(progress);
-    setQuizResults(quizData);
-    
-    // Update unlocked modules
-    const unlocked = JSON.parse(localStorage.getItem('unlocked_modules') || '["module-1"]');
-    setUnlockedModules(unlocked);
+      
+      setModuleProgress(progress);
+      setQuizResults(quizData);
+      setUnlockedModules(calculatedUnlockedModules);
+      
+      // Update database with calculated unlocked modules
+      try {
+        await fetch('/api/module-progress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user.uid,
+            moduleId: 'global', // Special module ID for global settings
+            completedSections: '[]',
+            unlockedModules: JSON.stringify(calculatedUnlockedModules)
+          })
+        });
+        
+        // Also update localStorage safely
+        safeSetLocalStorage(`unlocked_modules_${user.uid}`, calculatedUnlockedModules);
+      } catch (error) {
+        console.error('Failed to update unlocked modules in database:', error);
+      }
+      
+    } catch (error) {
+      console.error('Failed to load progress from database:', error);
+      // Fallback to existing localStorage method
+      const progress: { [key: string]: number } = {};
+      const quizData: { [key: string]: any } = {};
+      let calculatedUnlockedModules = ["module-1"];
+      
+      ['module-1', 'module-2', 'module-3', 'module-4', 'module-5'].forEach(moduleId => {
+        const moduleProgress = safeGetLocalStorage(`lesson_progress_${user.uid}_${moduleId}`, []);
+        progress[moduleId] = moduleProgress.length;
+        
+        const quizResult = safeGetLocalStorage(`quiz_result_${user.uid}_${moduleId}`, null);
+        if (quizResult) {
+          quizData[moduleId] = quizResult;
+          
+          // Calculate unlocked modules from localStorage
+          if (moduleId === 'module-1' && quizResult.passed) {
+            if (!calculatedUnlockedModules.includes('module-2')) {
+              calculatedUnlockedModules.push('module-2');
+            }
+          }
+          if (moduleId === 'module-2' && quizResult.passed) {
+            if (!calculatedUnlockedModules.includes('module-3')) {
+              calculatedUnlockedModules.push('module-3');
+            }
+          }
+          if (moduleId === 'module-3' && quizResult.passed) {
+            if (!calculatedUnlockedModules.includes('module-4')) {
+              calculatedUnlockedModules.push('module-4');
+            }
+          }
+          if (moduleId === 'module-4' && quizResult.passed) {
+            if (!calculatedUnlockedModules.includes('module-5')) {
+              calculatedUnlockedModules.push('module-5');
+            }
+          }
+        }
+      });
+      
+      setModuleProgress(progress);
+      setQuizResults(quizData);
+      setUnlockedModules(calculatedUnlockedModules);
+      
+      safeSetLocalStorage(`unlocked_modules_${user.uid}`, calculatedUnlockedModules);
+    }
   };
 
   useEffect(() => {
@@ -91,9 +259,9 @@ export default function DashboardPage() {
 
     try {
       // First try to get profile from localStorage
-      const cachedProfile = localStorage.getItem(`ecolearn_profile_${user.uid}`);
+      const cachedProfile = safeGetLocalStorage(`ecolearn_profile_${user.uid}`, null);
       if (cachedProfile) {
-        setProfile(JSON.parse(cachedProfile));
+        setProfile(cachedProfile);
       }
 
       // Then fetch fresh data from server
@@ -102,8 +270,8 @@ export default function DashboardPage() {
 
       if (data.success) {
         setProfile(data.profile);
-        // Update localStorage with fresh data
-        localStorage.setItem(`ecolearn_profile_${user.uid}`, JSON.stringify(data.profile));
+        // Update localStorage with fresh data safely
+        safeSetLocalStorage(`ecolearn_profile_${user.uid}`, data.profile);
       } else if (response.status === 404) {
         // Profile not found, redirect to setup
         setLocation('/profile-setup');
@@ -119,7 +287,55 @@ export default function DashboardPage() {
   };
 
   const handleLogout = async () => {
+    // Clear user-specific data before logout
+    if (user) {
+      // Clear all user-specific localStorage data
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith(`lesson_progress_${user.uid}_`) || 
+                   key.startsWith(`quiz_result_${user.uid}_`) || 
+                   key.startsWith(`unlocked_modules_${user.uid}`) ||
+                   key.startsWith(`ecolearn_profile_${user.uid}`))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
     await logout();
+  };
+  
+  // Debug function to check current progress
+  const debugProgress = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/debug/user-progress/${user.uid}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('=== USER PROGRESS DEBUG ===');
+        console.log('Module Progress:', data.data.moduleProgress);
+        console.log('Quiz Results:', data.data.quizResults);
+        console.log('Lesson Progress:', data.data.lessonProgress);
+        console.log('Current Unlocked Modules:', unlockedModules);
+        
+        // Also check localStorage safely
+        console.log('=== LOCALSTORAGE DATA ===');
+        ['module-1', 'module-2', 'module-3', 'module-4', 'module-5'].forEach(moduleId => {
+          const lessonProgress = safeGetLocalStorage(`lesson_progress_${user.uid}_${moduleId}`, null);
+          const quizResult = safeGetLocalStorage(`quiz_result_${user.uid}_${moduleId}`, null);
+          console.log(`${moduleId}:`, {
+            lessons: lessonProgress,
+            quiz: quizResult
+          });
+        });
+        
+        alert('Check browser console for detailed progress information');
+      }
+    } catch (error) {
+      console.error('Failed to debug progress:', error);
+      alert('Failed to get debug information');
+    }
   };
 
   if (authLoading || loading) {
@@ -203,6 +419,14 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
               <Button 
+                onClick={debugProgress}
+                variant="outline"
+                size="sm"
+                className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
+              >
+                Debug
+              </Button>
+              <Button 
                 onClick={handleLogout}
                 variant="outline"
                 size="sm"
@@ -243,21 +467,21 @@ export default function DashboardPage() {
                       stroke="#10b981"
                       strokeWidth="8"
                       fill="none"
-                      strokeDasharray={`${((moduleProgress['module-1'] || 0) + (moduleProgress['module-2'] || 0) + (moduleProgress['module-3'] || 0)) / 15 * 251.2} 251.2`}
+                      strokeDasharray={`${((moduleProgress['module-1'] || 0) + (moduleProgress['module-2'] || 0) + (moduleProgress['module-3'] || 0) + (moduleProgress['module-4'] || 0) + (moduleProgress['module-5'] || 0)) / 25 * 251.2} 251.2`}
                       className="transition-all duration-1000 ease-out"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-emerald-600">{((moduleProgress['module-1'] || 0) + (moduleProgress['module-2'] || 0) + (moduleProgress['module-3'] || 0))}</div>
-                      <div className="text-xs text-gray-500">/15</div>
+                      <div className="text-2xl font-bold text-emerald-600">{((moduleProgress['module-1'] || 0) + (moduleProgress['module-2'] || 0) + (moduleProgress['module-3'] || 0) + (moduleProgress['module-4'] || 0) + (moduleProgress['module-5'] || 0))}</div>
+                      <div className="text-xs text-gray-500">/25</div>
                     </div>
                   </div>
                 </div>
               </div>
               <p className="text-sm text-gray-600">Total Sections Completed</p>
               <Badge variant="secondary" className="mt-2 bg-emerald-100 text-emerald-700">
-                {Math.floor(((moduleProgress['module-1'] || 0) + (moduleProgress['module-2'] || 0) + (moduleProgress['module-3'] || 0)) / 5)} of 3 Modules
+                {Math.floor(((moduleProgress['module-1'] || 0) + (moduleProgress['module-2'] || 0) + (moduleProgress['module-3'] || 0) + (moduleProgress['module-4'] || 0) + (moduleProgress['module-5'] || 0)) / 5)} of 5 Modules
               </Badge>
             </CardContent>
           </Card>
@@ -331,7 +555,7 @@ export default function DashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
               {/* Module 1 - Unlocked */}
               <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 hover:shadow-lg transition-all duration-300 hover:scale-105 animate-card-hover glow-effect">
                 <CardHeader className="pb-3">
@@ -492,12 +716,172 @@ export default function DashboardPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Module 4 - Unlocked after Module 3 quiz */}
+              <Card className={`border-2 hover:shadow-lg transition-all duration-300 ${
+                unlockedModules.includes('module-4') 
+                  ? 'border-orange-200 bg-gradient-to-br from-orange-50 to-red-50 hover:scale-105 animate-card-hover' 
+                  : 'border-gray-200 bg-gray-50 opacity-75'
+              }`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Badge className={unlockedModules.includes('module-4') ? 'bg-orange-500 hover:bg-orange-600' : 'bg-gray-200 text-gray-600'}>
+                      {unlockedModules.includes('module-4') ? 'Available' : 'Locked'}
+                    </Badge>
+                    {unlockedModules.includes('module-4') ? (
+                      <div className="text-orange-600">
+                        <Zap className="w-5 h-5" />
+                      </div>
+                    ) : (
+                      <Lock className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                  <CardTitle className={`text-lg leading-tight break-words ${
+                    unlockedModules.includes('module-4') ? 'text-orange-700' : 'text-gray-600'
+                  }`}>Module 4: Waste Reduction & Recycling</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className={`text-sm mb-4 leading-relaxed ${
+                    unlockedModules.includes('module-4') ? 'text-gray-600' : 'text-gray-500'
+                  }`}>Discover the 3Rs, composting, plastic solutions, and waste sorting techniques.</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-gray-500">Progress</span>
+                    <span className={`text-xs font-semibold ${
+                      unlockedModules.includes('module-4') ? 'text-orange-600' : 'text-gray-400'
+                    }`}>{moduleProgress['module-4'] === 5 ? '100%' : `${Math.round((moduleProgress['module-4'] || 0) / 5 * 100)}%`}</span>
+                  </div>
+                  <Progress value={moduleProgress['module-4'] === 5 ? 100 : (moduleProgress['module-4'] || 0) / 5 * 100} className="mb-4" />
+                  {unlockedModules.includes('module-4') ? (
+                    <div className="space-y-2">
+                      <Button 
+                        className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                        onClick={() => setLocation('/lesson/module-4')}
+                      >
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        {moduleProgress['module-4'] === 5 ? 'Review Module' : 'Start Learning'}
+                      </Button>
+                      <Button 
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-300 disabled:text-gray-500"
+                        onClick={() => setLocation('/quiz/module-4')}
+                        disabled={moduleProgress['module-4'] !== 5}
+                      >
+                        <Trophy className="w-4 h-4 mr-2" />
+                        {moduleProgress['module-4'] === 5 ? 'Take Quiz' : 'Complete Module First'}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button disabled className="w-full bg-gray-300 text-gray-500 cursor-not-allowed">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Complete Module 3 Quiz
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Module 5 - Unlocked after Module 4 quiz */}
+              <Card className={`border-2 hover:shadow-lg transition-all duration-300 ${
+                unlockedModules.includes('module-5') 
+                  ? 'border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:scale-105 animate-card-hover' 
+                  : 'border-gray-200 bg-gray-50 opacity-75'
+              }`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Badge className={unlockedModules.includes('module-5') ? 'bg-purple-500 hover:bg-purple-600' : 'bg-gray-200 text-gray-600'}>
+                      {unlockedModules.includes('module-5') ? 'Available' : 'Locked'}
+                    </Badge>
+                    {unlockedModules.includes('module-5') ? (
+                      <div className="text-purple-600">
+                        <Zap className="w-5 h-5" />
+                      </div>
+                    ) : (
+                      <Lock className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                  <CardTitle className={`text-lg leading-tight break-words ${
+                    unlockedModules.includes('module-5') ? 'text-purple-700' : 'text-gray-600'
+                  }`}>Module 5: Biodiversity & Ecosystem Protection</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className={`text-sm mb-4 leading-relaxed ${
+                    unlockedModules.includes('module-5') ? 'text-gray-600' : 'text-gray-500'
+                  }`}>Learn about forest conservation, endangered species, and ecosystem protection.</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-gray-500">Progress</span>
+                    <span className={`text-xs font-semibold ${
+                      unlockedModules.includes('module-5') ? 'text-purple-600' : 'text-gray-400'
+                    }`}>{moduleProgress['module-5'] === 5 ? '100%' : `${Math.round((moduleProgress['module-5'] || 0) / 5 * 100)}%`}</span>
+                  </div>
+                  <Progress value={moduleProgress['module-5'] === 5 ? 100 : (moduleProgress['module-5'] || 0) / 5 * 100} className="mb-4" />
+                  {unlockedModules.includes('module-5') ? (
+                    <div className="space-y-2">
+                      <Button 
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                        onClick={() => setLocation('/lesson/module-5')}
+                      >
+                        <BookOpen className="w-4 h-4 mr-2" />
+                        {moduleProgress['module-5'] === 5 ? 'Review Module' : 'Start Learning'}
+                      </Button>
+                      <Button 
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-300 disabled:text-gray-500"
+                        onClick={() => setLocation('/quiz/module-5')}
+                        disabled={moduleProgress['module-5'] !== 5}
+                      >
+                        <Trophy className="w-4 h-4 mr-2" />
+                        {moduleProgress['module-5'] === 5 ? 'Take Quiz' : 'Complete Module First'}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button disabled className="w-full bg-gray-300 text-gray-500 cursor-not-allowed">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Complete Module 4 Quiz
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </CardContent>
         </Card>
 
         {/* Leaderboard & Community */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Student Profile Card */}
+          <Card className="bg-white/80 backdrop-blur-sm border-emerald-100">
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-emerald-700 flex items-center space-x-2">
+                <Users className="w-5 h-5" />
+                <span>Student Profile</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                  <span className="text-sm font-medium text-emerald-700">Name</span>
+                  <span className="text-sm text-emerald-600 font-semibold">{profile.fullName}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <span className="text-sm font-medium text-blue-700">School</span>
+                  <span className="text-sm text-blue-600 font-semibold">{profile.schoolName}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <span className="text-sm font-medium text-purple-700">Grade</span>
+                  <span className="text-sm text-purple-600 font-semibold">{profile.grade}</span>
+                </div>
+                {profile.class && (
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                    <span className="text-sm font-medium text-yellow-700">Class/Section</span>
+                    <span className="text-sm text-yellow-600 font-semibold">{profile.class}</span>
+                  </div>
+                )}
+                {profile.studentId && (
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">Student ID</span>
+                    <span className="text-sm text-gray-600 font-semibold">{profile.studentId}</span>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Leaderboard Preview */}
           <Card className="bg-white/80 backdrop-blur-sm border-purple-100">
             <CardHeader>

@@ -19,6 +19,40 @@ import {
   Zap
 } from 'lucide-react';
 
+// Safe JSON parsing utility to prevent console errors
+const safeJSONParse = (str: string | null, defaultValue: any = null) => {
+  if (!str) return defaultValue;
+  try {
+    // If it's already an object, return it
+    if (typeof str === 'object') return str;
+    return JSON.parse(str);
+  } catch (error) {
+    console.warn('Failed to parse JSON:', str, error);
+    return defaultValue;
+  }
+};
+
+// Safe localStorage getter with JSON parsing
+const safeGetLocalStorage = (key: string, defaultValue: any = null) => {
+  try {
+    const item = localStorage.getItem(key);
+    return safeJSONParse(item, defaultValue);
+  } catch (error) {
+    console.warn('Failed to get localStorage item:', key, error);
+    return defaultValue;
+  }
+};
+
+// Safe localStorage setter with JSON stringification
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    localStorage.setItem(key, stringValue);
+  } catch (error) {
+    console.warn('Failed to set localStorage item:', key, error);
+  }
+};
+
 interface LessonSection {
   id: string;
   title: string;
@@ -239,6 +273,138 @@ const moduleData: { [key: string]: ModuleData } = {
         completed: false
       }
     ]
+  },
+  'module-4': {
+    id: 'module-4',
+    title: 'Waste Reduction & Recycling',
+    totalSections: 5,
+    sections: [
+      {
+        id: 'section-1',
+        title: 'The 3Rs—Reduce, Reuse, Recycle',
+        content: 'The 3Rs are the foundation of waste management. Reduce: Use less and avoid waste (e.g., don\'t buy what you don\'t need). Reuse: Use things again instead of throwing them away (e.g., refill bottles). Recycle: Turn old things into new products (e.g., paper, plastics).',
+        example: 'Reusing a cloth bag can save hundreds of plastic bags per year!',
+        learnMore: {
+          text: 'Wikipedia: Waste Minimization',
+          url: 'https://en.wikipedia.org/wiki/Waste_minimization'
+        },
+        imageDescription: '3R symbol, recycling bins',
+        completed: false
+      },
+      {
+        id: 'section-2',
+        title: 'Composting and Organic Waste Management',
+        content: 'Composting turns food scraps and leaves into rich soil, reducing landfill waste and improving gardens. Many schools start compost pits for organic waste.',
+        funFact: 'Never compost meat, dairy, or plastics—only plant-based materials!',
+        learnMore: {
+          text: 'Wikipedia: Compost',
+          url: 'https://en.wikipedia.org/wiki/Compost'
+        },
+        imageDescription: 'Compost bin illustration',
+        completed: false
+      },
+      {
+        id: 'section-3',
+        title: 'Plastic Pollution Solutions',
+        content: 'Plastics take hundreds of years to break down. Solutions include switching to alternatives (cloth, jute, glass), using fewer packaged goods, and joining clean-up drives.',
+        funFact: 'Plastic pollution harms animals and even enters our food and water!',
+        learnMore: {
+          text: 'Wikipedia: Plastic Pollution',
+          url: 'https://en.wikipedia.org/wiki/Plastic_pollution'
+        },
+        imageDescription: 'Plastic-free campaign image or polluted beach',
+        completed: false
+      },
+      {
+        id: 'section-4',
+        title: 'Sorting Waste for Recycling',
+        content: 'Know your bins! Separate recyclables (paper, glass, plastic) from organic and hazardous waste. Schools and cities often have color-coded bins.',
+        example: 'Mixing food with dry recyclables makes recycling impossible.',
+        learnMore: {
+          text: 'Wikipedia: Waste Sorting',
+          url: 'https://en.wikipedia.org/wiki/Waste_sorting'
+        },
+        imageDescription: 'Different colored bins labeled',
+        completed: false
+      },
+      {
+        id: 'section-5',
+        title: 'Everyday Waste Reduction Tips',
+        content: 'Carry reusable bottles/cups. Buy bulk to avoid extra packaging. Repair items instead of discarding. Donate what you no longer need. Each small action reduces overall waste!',
+        learnMore: {
+          text: 'Wikipedia: Waste Management',
+          url: 'https://en.wikipedia.org/wiki/Waste_management'
+        },
+        imageDescription: 'Kids using reusable items, repairing toys',
+        completed: false
+      }
+    ]
+  },
+  'module-5': {
+    id: 'module-5',
+    title: 'Biodiversity & Ecosystem Protection',
+    totalSections: 5,
+    sections: [
+      {
+        id: 'section-1',
+        title: 'Forest Conservation Importance',
+        content: 'Forests house a huge variety of plants and animals, and provide clean air and water. Conserving forests prevents soil erosion and protects habitats. Deforestation disrupts balance.',
+        funFact: 'Rainforests are home to more than half of Earth\'s species!',
+        learnMore: {
+          text: 'Wikipedia: Forest Conservation',
+          url: 'https://en.wikipedia.org/wiki/Forest_conservation'
+        },
+        imageDescription: 'Trees, animals, lush forest',
+        completed: false
+      },
+      {
+        id: 'section-2',
+        title: 'Endangered Species Protection',
+        content: 'Many animals and plants are now endangered due to habitat loss, pollution, and hunting. Conservation groups create reserves and laws to save them.',
+        example: 'Tigers, elephants, rhinos, and pandas are all endangered.',
+        learnMore: {
+          text: 'Wikipedia: Endangered Species',
+          url: 'https://en.wikipedia.org/wiki/Endangered_species'
+        },
+        imageDescription: 'Iconic endangered animals',
+        completed: false
+      },
+      {
+        id: 'section-3',
+        title: 'Food Web Interactions',
+        content: 'Every organism in an ecosystem is linked—plants are eaten by herbivores, which are eaten by carnivores. Disruptions, like pollution or extinction, affect the entire food web.',
+        funFact: 'Removing one species can impact many others!',
+        learnMore: {
+          text: 'Wikipedia: Food Web',
+          url: 'https://en.wikipedia.org/wiki/Food_web'
+        },
+        imageDescription: 'Simple food web diagram',
+        completed: false
+      },
+      {
+        id: 'section-4',
+        title: 'Human Impact on Ecosystems',
+        content: 'Urbanization, pollution, and climate change alter habitats and endanger biodiversity. Understanding our impact helps us make better choices.',
+        example: 'Littering and construction can destroy nesting sites for birds.',
+        learnMore: {
+          text: 'Wikipedia: Human Impact on the Environment',
+          url: 'https://en.wikipedia.org/wiki/Human_impact_on_the_environment'
+        },
+        imageDescription: 'City infographic, pollution',
+        completed: false
+      },
+      {
+        id: 'section-5',
+        title: 'How Can You Protect Biodiversity?',
+        content: 'Participate in tree-planting drives. Reduce waste and pollution. Support wildlife conservation groups. Spread awareness. Every small action adds up together!',
+        learnMore: {
+          text: 'Wikipedia: Conservation Movement',
+          url: 'https://en.wikipedia.org/wiki/Conservation_movement'
+        },
+        imageDescription: 'Kids planting trees, conservation badge',
+        completed: false
+      }
+    ]
   }
 };
 
@@ -274,11 +440,29 @@ export default function LessonPage() {
       }
     }
 
-    // Load completed sections from localStorage
-    const completed = localStorage.getItem(`lesson_progress_${params.moduleId}`);
-    if (completed) {
-      setCompletedSections(new Set(JSON.parse(completed)));
-    }
+    // Load completed sections from database first, then localStorage as backup
+    const loadCompletedSections = async () => {
+      try {
+        const response = await fetch(`/api/module-progress/${user.uid}`);
+        if (response.ok) {
+          const { progress } = await response.json();
+          const moduleProgress = progress.find((mp: any) => mp.moduleId === params.moduleId);
+          if (moduleProgress) {
+            const completedSections = safeJSONParse(moduleProgress.completedSections, []);
+            setCompletedSections(new Set(completedSections));
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load progress from database:', error);
+      }
+      
+      // Fallback to localStorage with safe parsing
+      const completed = safeGetLocalStorage(`lesson_progress_${user.uid}_${params.moduleId}`, []);
+      setCompletedSections(new Set(completed));
+    };
+    
+    loadCompletedSections();
   }, [user, params.moduleId, params.sectionId, setLocation]);
 
   // Reading timer
@@ -290,13 +474,33 @@ export default function LessonPage() {
     return () => clearInterval(timer);
   }, [currentSectionIndex]);
 
-  const handleSectionComplete = (sectionId: string) => {
+  const handleSectionComplete = async (sectionId: string) => {
+    if (!user) return;
+    
     const newCompleted = new Set(completedSections);
     newCompleted.add(sectionId);
     setCompletedSections(newCompleted);
     
-    // Save to localStorage
-    localStorage.setItem(`lesson_progress_${params.moduleId}`, JSON.stringify(Array.from(newCompleted)));
+    // Save to database first, then localStorage as backup
+    try {
+      await fetch('/api/module-progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          moduleId: params.moduleId,
+          completedSections: JSON.stringify(Array.from(newCompleted)),
+          unlockedModules: JSON.stringify(["module-1"]) // This will be updated by quiz completion
+        })
+      });
+    } catch (error) {
+      console.error('Failed to save progress to database:', error);
+    }
+    
+    // Also save to localStorage as backup safely
+    safeSetLocalStorage(`lesson_progress_${user.uid}_${params.moduleId}`, Array.from(newCompleted));
     
     // Auto-advance to next section after a short delay
     setTimeout(() => {

@@ -19,6 +19,40 @@ import {
   Zap
 } from 'lucide-react';
 
+// Safe JSON parsing utility to prevent console errors
+const safeJSONParse = (str: string | null, defaultValue: any = null) => {
+  if (!str) return defaultValue;
+  try {
+    // If it's already an object, return it
+    if (typeof str === 'object') return str;
+    return JSON.parse(str);
+  } catch (error) {
+    console.warn('Failed to parse JSON:', str, error);
+    return defaultValue;
+  }
+};
+
+// Safe localStorage getter with JSON parsing
+const safeGetLocalStorage = (key: string, defaultValue: any = null) => {
+  try {
+    const item = localStorage.getItem(key);
+    return safeJSONParse(item, defaultValue);
+  } catch (error) {
+    console.warn('Failed to get localStorage item:', key, error);
+    return defaultValue;
+  }
+};
+
+// Safe localStorage setter with JSON stringification
+const safeSetLocalStorage = (key: string, value: any) => {
+  try {
+    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    localStorage.setItem(key, stringValue);
+  } catch (error) {
+    console.warn('Failed to set localStorage item:', key, error);
+  }
+};
+
 interface QuizQuestion {
   id: string;
   question: string;
@@ -313,6 +347,184 @@ const quizData: { [key: string]: QuizData } = {
         points: 10
       }
     ]
+  },
+  'module-4': {
+    id: 'module-4',
+    title: 'Waste Reduction & Recycling Quiz',
+    instructions: 'Answer all 10 MCQs. Each correct answer awards 10 points; incorrect or skipped answers get 0. You need 30 points to unlock the next module.',
+    passingScore: 30,
+    totalPoints: 100,
+    questions: [
+      {
+        id: 'q1',
+        question: 'Which is NOT one of the 3Rs?',
+        options: ['Review', 'Reduce', 'Reuse', 'Recycle'],
+        correctAnswer: 0,
+        explanation: 'The 3Rs are Reduce, Reuse, and Recycle. Review is not one of them.',
+        points: 10
+      },
+      {
+        id: 'q2',
+        question: 'Composting is mostly for:',
+        options: ['Organic waste', 'Plastic bottles', 'Car batteries', 'Old electronics'],
+        correctAnswer: 0,
+        explanation: 'Composting is for organic waste like food scraps and yard waste, not synthetic materials.',
+        points: 10
+      },
+      {
+        id: 'q3',
+        question: 'Plastic pollution harms:',
+        options: ['Animals and people', 'Only plants', 'Only trees', 'Nothing'],
+        correctAnswer: 0,
+        explanation: 'Plastic pollution affects both animals and people through environmental contamination.',
+        points: 10
+      },
+      {
+        id: 'q4',
+        question: 'Best option to reduce single-use plastics:',
+        options: ['Use a cloth bag', 'Take extra plastic bags', 'Burn plastics', 'Litter in parks'],
+        correctAnswer: 0,
+        explanation: 'Using reusable cloth bags eliminates the need for single-use plastic bags.',
+        points: 10
+      },
+      {
+        id: 'q5',
+        question: 'Never compost this item:',
+        options: ['Banana peels', 'Plastics', 'Leaves', 'Grass'],
+        correctAnswer: 1,
+        explanation: 'Plastics should never be composted as they don\'t decompose naturally.',
+        points: 10
+      },
+      {
+        id: 'q6',
+        question: 'Which waste is easily recycled?',
+        options: ['Paper', 'Food and drink leftovers', 'Old shoes', 'Disposable tissues'],
+        correctAnswer: 0,
+        explanation: 'Paper is one of the most easily and commonly recycled materials.',
+        points: 10
+      },
+      {
+        id: 'q7',
+        question: 'Color-coded bins help us to:',
+        options: ['Sort waste', 'Eat faster', 'Sleep better', 'Watch TV'],
+        correctAnswer: 0,
+        explanation: 'Color-coded bins help people properly sort different types of waste for recycling.',
+        points: 10
+      },
+      {
+        id: 'q8',
+        question: 'A good way to reuse:',
+        options: ['Refill water bottle', 'Throw away immediately', 'Leave on the street', 'Use use-and-throw items'],
+        correctAnswer: 0,
+        explanation: 'Refilling water bottles is a perfect example of reusing items instead of discarding them.',
+        points: 10
+      },
+      {
+        id: 'q9',
+        question: 'If you donate old clothes, you are:',
+        options: ['Reducing waste', 'Polluting rivers', 'Wasting money', 'Making compost'],
+        correctAnswer: 0,
+        explanation: 'Donating old clothes prevents them from becoming waste and gives them a second life.',
+        points: 10
+      },
+      {
+        id: 'q10',
+        question: 'To cut down waste at lunch, you can:',
+        options: ['Use a reusable lunch box', 'Take extra wrappers', 'Throw food away', 'Buy single-use forks'],
+        correctAnswer: 0,
+        explanation: 'Using reusable lunch boxes eliminates the need for disposable packaging.',
+        points: 10
+      }
+    ]
+  },
+  'module-5': {
+    id: 'module-5',
+    title: 'Biodiversity & Ecosystem Protection Quiz',
+    instructions: 'Answer all 10 MCQs. Each correct answer awards 10 points; incorrect or skipped answers get 0. You need 30 points to unlock the next module.',
+    passingScore: 30,
+    totalPoints: 100,
+    questions: [
+      {
+        id: 'q1',
+        question: 'Why are forests important?',
+        options: ['Provide habitat and clean air', 'Make more plastic', 'Help build roads', 'Are not needed by animals'],
+        correctAnswer: 0,
+        explanation: 'Forests provide essential habitats for wildlife and produce clean air through photosynthesis.',
+        points: 10
+      },
+      {
+        id: 'q2',
+        question: 'Endangered species are:',
+        options: ['At risk of extinction', 'Everywhere and safe', 'Never found in nature', 'Plants only'],
+        correctAnswer: 0,
+        explanation: 'Endangered species are those at risk of becoming extinct in the near future.',
+        points: 10
+      },
+      {
+        id: 'q3',
+        question: 'What happens when a species disappears from a food web?',
+        options: ['Others are affected', 'Nothing changes', 'More pollution', 'Water increases'],
+        correctAnswer: 0,
+        explanation: 'When a species disappears, it affects the entire food web and ecosystem balance.',
+        points: 10
+      },
+      {
+        id: 'q4',
+        question: 'Who can help protect biodiversity?',
+        options: ['Everyone', 'Only teachers', 'Only scientists', 'Only students'],
+        correctAnswer: 0,
+        explanation: 'Everyone can contribute to protecting biodiversity through their daily actions and choices.',
+        points: 10
+      },
+      {
+        id: 'q5',
+        question: 'A rainforest contains:',
+        options: ['Many species', 'Only rocks', 'Mainly buildings', 'Little biodiversity'],
+        correctAnswer: 0,
+        explanation: 'Rainforests are home to more than half of Earth\'s species, making them incredibly biodiverse.',
+        points: 10
+      },
+      {
+        id: 'q6',
+        question: 'One way to protect animals:',
+        options: ['Support conservation groups', 'Litter in parks', 'Cut down forests', 'Ignore wildlife laws'],
+        correctAnswer: 0,
+        explanation: 'Supporting conservation groups helps fund protection efforts for endangered animals.',
+        points: 10
+      },
+      {
+        id: 'q7',
+        question: 'Which is an effect of urbanization?',
+        options: ['Habitat loss', 'More trees', 'Clean rivers', 'More wildlife'],
+        correctAnswer: 0,
+        explanation: 'Urbanization often leads to habitat loss as natural areas are converted to cities.',
+        points: 10
+      },
+      {
+        id: 'q8',
+        question: 'Pollution can:',
+        options: ['Harm ecosystems', 'Create new species', 'Grow more food', 'Fix problems'],
+        correctAnswer: 0,
+        explanation: 'Pollution disrupts ecosystems and can harm or kill plants and animals.',
+        points: 10
+      },
+      {
+        id: 'q9',
+        question: 'How can students help biodiversity?',
+        options: ['Plant trees', 'Pollute rivers', 'Hunt animals', 'Destroy habitats'],
+        correctAnswer: 0,
+        explanation: 'Planting trees helps restore habitats and provides homes for various species.',
+        points: 10
+      },
+      {
+        id: 'q10',
+        question: 'A healthy ecosystem has:',
+        options: ['Many connected species', 'Only one species', 'No plants', 'All pollution'],
+        correctAnswer: 0,
+        explanation: 'Healthy ecosystems have diverse, interconnected species that depend on each other.',
+        points: 10
+      }
+    ]
   }
 };
 
@@ -384,10 +596,35 @@ export default function QuizPage() {
   };
 
   const saveQuizResults = async (finalAttempts: QuizAttempt[]) => {
+    if (!user) return;
+    
     const totalScore = finalAttempts.reduce((sum, attempt) => sum + attempt.points, 0);
     const passed = totalScore >= currentQuiz!.passingScore;
     
-    // Save to localStorage
+    // Save to database first
+    try {
+      await fetch('/api/quiz-results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          moduleId: params.moduleId,
+          score: totalScore,
+          totalPoints: currentQuiz!.totalPoints,
+          passed,
+          attempts: JSON.stringify(finalAttempts),
+          timeTaken: Math.round((new Date().getTime() - startTime.getTime()) / 1000)
+        })
+      });
+      
+      console.log('Quiz result saved to database successfully');
+    } catch (error) {
+      console.error('Failed to save quiz result to database:', error);
+    }
+    
+    // Save to localStorage as backup with user-specific key
     const quizResult = {
       moduleId: params.moduleId,
       score: totalScore,
@@ -398,24 +635,63 @@ export default function QuizPage() {
       timeTaken: Math.round((new Date().getTime() - startTime.getTime()) / 1000)
     };
 
-    localStorage.setItem(`quiz_result_${params.moduleId}`, JSON.stringify(quizResult));
+    localStorage.setItem(`quiz_result_${user.uid}_${params.moduleId}`, JSON.stringify(quizResult));
 
-    // If passed, unlock next module (this would typically update the database)
+    // If passed, unlock next module and save to database
     if (passed) {
-      const unlockedModules = JSON.parse(localStorage.getItem('unlocked_modules') || '["module-1"]');
       const currentModuleNum = parseInt(params.moduleId.split('-')[1]);
       const nextModule = `module-${currentModuleNum + 1}`;
       
-      if (!unlockedModules.includes(nextModule) && currentModuleNum < 3) {
-        unlockedModules.push(nextModule);
-        localStorage.setItem('unlocked_modules', JSON.stringify(unlockedModules));
+      if (currentModuleNum < 5) {
+        try {
+          // Small delay to ensure quiz result is saved
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Force refresh unlocked modules from server (which calculates based on quiz results)
+          const response = await fetch(`/api/unlocked-modules/${user.uid}`);
+          if (response.ok) {
+            const data = await response.json();
+            const unlockedModules = data.unlockedModules;
+            
+            // Update localStorage as backup safely
+            safeSetLocalStorage(`unlocked_modules_${user.uid}`, unlockedModules);
+            
+            console.log('Modules unlocked after quiz completion:', unlockedModules);
+          } else {
+            console.error('Failed to fetch updated unlocked modules');
+          }
+        } catch (error) {
+          console.error('Failed to update unlocked modules:', error);
+          
+          // Fallback to localStorage logic with safe parsing
+          const unlockedModules = safeGetLocalStorage(`unlocked_modules_${user.uid}`, ['module-1']);
+          if (!unlockedModules.includes(nextModule)) {
+            unlockedModules.push(nextModule);
+            safeSetLocalStorage(`unlocked_modules_${user.uid}`, unlockedModules);
+          }
+        }
       }
 
-      // Award points (this would typically be done via API)
-      const currentProfile = JSON.parse(localStorage.getItem(`ecolearn_profile_${user!.uid}`) || '{}');
-      if (currentProfile.ecoPoints !== undefined) {
-        currentProfile.ecoPoints += totalScore;
-        localStorage.setItem(`ecolearn_profile_${user!.uid}`, JSON.stringify(currentProfile));
+      // Award points (update profile)
+      try {
+        const currentProfile = safeGetLocalStorage(`ecolearn_profile_${user.uid}`, {});
+        if (currentProfile.ecoPoints !== undefined) {
+          const updatedProfile = { ...currentProfile, ecoPoints: currentProfile.ecoPoints + totalScore };
+          
+          // Update profile in database
+          await fetch(`/api/profile/${user.uid}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ecoPoints: updatedProfile.ecoPoints })
+          });
+          
+          // Update localStorage safely
+          safeSetLocalStorage(`ecolearn_profile_${user.uid}`, updatedProfile);
+        }
+      } catch (error) {
+        console.error('Failed to update profile with quiz points:', error);
       }
     }
   };
@@ -444,7 +720,7 @@ export default function QuizPage() {
   const goToNextModule = () => {
     const currentModuleNum = parseInt(params.moduleId.split('-')[1]);
     const nextModule = `module-${currentModuleNum + 1}`;
-    if (currentModuleNum < 3) {
+    if (currentModuleNum < 5) {
       setLocation(`/lesson/${nextModule}`);
     } else {
       setLocation('/dashboard');

@@ -30,6 +30,7 @@ export const studentProfiles = pgTable("student_profiles", {
   email: text("email").notNull(),
   schoolName: text("school_name").notNull(),
   grade: text("grade").notNull(),
+  class: text("class"), // Student's class/section (e.g., "A", "B", "Science", "Commerce")
   studentId: text("student_id"),
   ecoPoints: integer("eco_points").notNull().default(0),
   currentLevel: integer("current_level").notNull().default(1),
@@ -79,6 +80,31 @@ export const userChallengeSubmissions = pgTable("user_challenge_submissions", {
   reviewedAt: timestamp("reviewed_at"),
 });
 
+// Quiz Results Storage
+export const userQuizResults = pgTable("user_quiz_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  moduleId: varchar("module_id").notNull(),
+  score: integer("score").notNull().default(0),
+  totalPoints: integer("total_points").notNull().default(0),
+  passed: boolean("passed").notNull().default(false),
+  attempts: text("attempts").notNull().default('[]'), // JSON string of attempts
+  completedAt: timestamp("completed_at").notNull().default(sql`now()`),
+  timeTaken: integer("time_taken").default(0), // in seconds
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+// Module Progress Storage  
+export const userModuleProgress = pgTable("user_module_progress", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  moduleId: varchar("module_id").notNull(),
+  completedSections: text("completed_sections").notNull().default('[]'), // JSON string of section IDs
+  unlockedModules: text("unlocked_modules").notNull().default('["module-1"]'), // JSON string of unlocked module IDs
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
 // Insert Schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -98,6 +124,7 @@ export const insertStudentProfileSchema = createInsertSchema(studentProfiles).pi
   email: true,
   schoolName: true,
   grade: true,
+  class: true,
   studentId: true,
 });
 
@@ -128,6 +155,23 @@ export const insertChallengeSubmissionSchema = createInsertSchema(userChallengeS
   description: true,
 });
 
+export const insertQuizResultSchema = createInsertSchema(userQuizResults).pick({
+  userId: true,
+  moduleId: true,
+  score: true,
+  totalPoints: true,
+  passed: true,
+  attempts: true,
+  timeTaken: true,
+});
+
+export const insertModuleProgressSchema = createInsertSchema(userModuleProgress).pick({
+  userId: true,
+  moduleId: true,
+  completedSections: true,
+  unlockedModules: true,
+});
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -143,3 +187,7 @@ export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
 export type UserBadge = typeof userBadges.$inferSelect;
 export type InsertChallengeSubmission = z.infer<typeof insertChallengeSubmissionSchema>;
 export type ChallengeSubmission = typeof userChallengeSubmissions.$inferSelect;
+export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
+export type QuizResult = typeof userQuizResults.$inferSelect;
+export type InsertModuleProgress = z.infer<typeof insertModuleProgressSchema>;
+export type ModuleProgress = typeof userModuleProgress.$inferSelect;
