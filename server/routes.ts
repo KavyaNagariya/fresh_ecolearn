@@ -447,7 +447,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already submitted for this challenge
       const existingSubmission = await storage.getChallengeSubmission(userId, challengeId);
       if (existingSubmission) {
-        return res.status(400).json({ error: "You have already submitted for this challenge" });
+        // Allow resubmission only if the previous submission was rejected
+        if (existingSubmission.status === 'approved') {
+          return res.status(400).json({ error: "You have already submitted for this challenge and it was approved" });
+        } else if (existingSubmission.status === 'pending') {
+          return res.status(400).json({ error: "You have already submitted for this challenge and it's pending review" });
+        }
+        // If status is 'rejected', allow resubmission by continuing
       }
 
       // Upload photo to Cloudinary
@@ -457,16 +463,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `ecolearn/challenges/${challengeId}`
       );
 
-      // Create submission
-      const submissionData = {
-        userId,
-        challengeId,
-        photoUrl: uploadResult.url,
-        caption: caption || ''
-      };
+      let submission;
+      
+      if (existingSubmission && existingSubmission.status === 'rejected') {
+        // Update existing rejected submission
+        const updateData = {
+          photoUrl: uploadResult.url,
+          caption: caption || '',
+          status: 'pending' as const,
+          pointsAwarded: 0,
+          reviewedAt: null,
+          reviewedBy: null,
+          feedback: null
+        };
+        submission = await storage.updateChallengeSubmission(existingSubmission.id, updateData);
+      } else {
+        // Create new submission
+        const submissionData = {
+          userId,
+          challengeId,
+          photoUrl: uploadResult.url,
+          caption: caption || ''
+        };
 
-      const validatedData = insertChallengeSubmissionSchema.parse(submissionData);
-      const submission = await storage.createChallengeSubmission(validatedData);
+        const validatedData = insertChallengeSubmissionSchema.parse(submissionData);
+        submission = await storage.createChallengeSubmission(validatedData);
+      }
       
       res.json({ success: true, submission });
     } catch (error) {
@@ -518,8 +540,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin verification middleware
+  const verifyAdminToken = (req: any, res: any, next: any) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token || !token.startsWith('admin_')) {
+      return res.status(401).json({ error: "Invalid admin token" });
+    }
+    
+    next();
+  };
+
   // Approve/Reject submission (Admin)
-  app.put("/api/submissions/:submissionId/review", async (req, res) => {
+  app.put("/api/submissions/:submissionId/review", verifyAdminToken, async (req, res) => {
     try {
       const { submissionId } = req.params;
       const { status, feedback, reviewedBy } = req.body;
@@ -625,17 +658,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Logout failed" });
     }
   });
-
-  // Admin verification middleware
-  const verifyAdminToken = (req: any, res: any, next: any) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token || !token.startsWith('admin_')) {
-      return res.status(401).json({ error: "Invalid admin token" });
-    }
-    
-    next();
-  };
 
   // Protected admin routes would use the middleware like this:
   // app.get("/api/admin/dashboard", verifyAdminToken, async (req, res) => { ... });

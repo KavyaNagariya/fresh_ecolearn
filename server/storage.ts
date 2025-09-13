@@ -61,6 +61,7 @@ export interface IStorage {
   updateChallenge(challengeId: string, updates: Partial<Challenge>): Promise<Challenge | undefined>;
   createChallengeSubmission(submission: InsertChallengeSubmission): Promise<ChallengeSubmission>;
   getChallengeSubmission(userId: string, challengeId: string): Promise<ChallengeSubmission | undefined>;
+  updateChallengeSubmission(submissionId: string, updates: Partial<ChallengeSubmission>): Promise<ChallengeSubmission | undefined>;
   getUserChallengeSubmissions(userId: string, status?: string): Promise<ChallengeSubmission[]>;
   getChallengeSubmissions(challengeId: string, status?: string): Promise<ChallengeSubmission[]>;
   getPendingSubmissions(): Promise<ChallengeSubmission[]>;
@@ -292,6 +293,18 @@ export class PostgreSQLStorage implements IStorage {
           eq(userChallengeSubmissions.challengeId, challengeId)
         )
       );
+    return result[0];
+  }
+
+  async updateChallengeSubmission(submissionId: string, updates: Partial<ChallengeSubmission>): Promise<ChallengeSubmission | undefined> {
+    const result = await this.db
+      .update(userChallengeSubmissions)
+      .set({
+        ...updates,
+        updatedAt: new Date()
+      })
+      .where(eq(userChallengeSubmissions.id, submissionId))
+      .returning();
     return result[0];
   }
 
@@ -730,6 +743,15 @@ export class MemStorage implements IStorage {
   async getChallengeSubmission(userId: string, challengeId: string): Promise<ChallengeSubmission | undefined> {
     return Array.from(this.challengeSubmissions.values())
       .find(cs => cs.userId === userId && cs.challengeId === challengeId);
+  }
+
+  async updateChallengeSubmission(submissionId: string, updates: Partial<ChallengeSubmission>): Promise<ChallengeSubmission | undefined> {
+    const submission = this.challengeSubmissions.get(submissionId);
+    if (!submission) return undefined;
+    
+    const updatedSubmission = { ...submission, ...updates };
+    this.challengeSubmissions.set(submissionId, updatedSubmission);
+    return updatedSubmission;
   }
 
   async getUserChallengeSubmissions(userId: string, status?: string): Promise<ChallengeSubmission[]> {

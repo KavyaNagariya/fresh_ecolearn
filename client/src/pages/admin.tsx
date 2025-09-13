@@ -92,7 +92,6 @@ export default function AdminPage() {
   const [userProfiles, setUserProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [selectedSubmission, setSelectedSubmission] = useState<ChallengeSubmission | null>(null);
   const [reviewFeedback, setReviewFeedback] = useState('');
   const [isReviewing, setIsReviewing] = useState(false);
@@ -168,10 +167,12 @@ export default function AdminPage() {
     
     setIsReviewing(true);
     try {
+      const token = localStorage.getItem('admin_token');
       const response = await fetch(`/api/submissions/${submissionId}/review`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           status,
@@ -206,8 +207,7 @@ export default function AdminPage() {
   };
 
   const filteredSubmissions = submissions.filter(submission => {
-    if (filter === 'all') return true;
-    return submission.status === filter;
+    return submission.status === 'pending';
   });
 
   if (loading) {
@@ -267,21 +267,12 @@ export default function AdminPage() {
       <main className="container mx-auto px-6 py-8">
         {/* Filter Tabs */}
         <div className="flex space-x-2 mb-6">
-          {[
-            { key: 'all', label: 'All Submissions', count: submissions.length },
-            { key: 'pending', label: 'Pending Review', count: submissions.filter(s => s.status === 'pending').length },
-            { key: 'approved', label: 'Approved', count: submissions.filter(s => s.status === 'approved').length },
-            { key: 'rejected', label: 'Rejected', count: submissions.filter(s => s.status === 'rejected').length }
-          ].map(({ key, label, count }) => (
-            <Button
-              key={key}
-              variant={filter === key ? "default" : "outline"}
-              onClick={() => setFilter(key as any)}
-              className={filter === key ? "bg-blue-600 text-white" : "border-blue-200 text-blue-600 hover:bg-blue-50"}
-            >
-              {label} ({count})
-            </Button>
-          ))}
+          <Button
+            variant="default"
+            className="bg-blue-600 text-white"
+          >
+            Pending Review ({submissions.filter(s => s.status === 'pending').length})
+          </Button>
         </div>
 
         {/* Submissions Grid */}
@@ -292,7 +283,7 @@ export default function AdminPage() {
                 <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">No submissions found</h3>
                 <p className="text-gray-500">
-                  {filter === 'pending' ? 'No submissions pending review.' : `No ${filter} submissions.`}
+                  No submissions pending review.
                 </p>
               </CardContent>
             </Card>
