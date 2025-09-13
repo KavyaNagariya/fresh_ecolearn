@@ -68,16 +68,34 @@ export const userBadges = pgTable("user_badges", {
   earnedAt: timestamp("earned_at").notNull().default(sql`now()`),
 });
 
-// Challenge Submissions
+// Challenges - Store challenge definitions
+export const challenges = pgTable("challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  points: integer("points").notNull().default(10),
+  category: text("category").notNull(), // e.g., "Climate Change", "Water Conservation"
+  week: integer("week").notNull().default(1),
+  isActive: boolean("is_active").notNull().default(true),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// Challenge Submissions - Enhanced with more fields
 export const userChallengeSubmissions = pgTable("user_challenge_submissions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
   challengeId: varchar("challenge_id").notNull(),
-  imageUrl: text("image_url"),
-  description: text("description"),
+  photoUrl: text("photo_url"), // Cloudinary URL
+  caption: text("caption"), // User's description of their photo/action
   status: text("status").notNull().default("pending"), // pending, approved, rejected
+  pointsAwarded: integer("points_awarded").notNull().default(0),
   submittedAt: timestamp("submitted_at").notNull().default(sql`now()`),
   reviewedAt: timestamp("reviewed_at"),
+  reviewedBy: varchar("reviewed_by"), // Admin user ID who reviewed
+  feedback: text("feedback"), // Reviewer's feedback or comments
 });
 
 // Quiz Results Storage
@@ -103,6 +121,19 @@ export const userModuleProgress = pgTable("user_module_progress", {
   unlockedModules: text("unlocked_modules").notNull().default('["module-1"]'), // JSON string of unlocked module IDs
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
+});
+
+// Admin Users - Separate admin authentication
+export const adminUsers = pgTable("admin_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(), // Hashed password
+  fullName: text("full_name").notNull(),
+  role: text("role").notNull().default("admin"), // admin, super_admin
+  isActive: boolean("is_active").notNull().default(true),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
 // Insert Schemas for validation
@@ -148,11 +179,22 @@ export const insertUserBadgeSchema = createInsertSchema(userBadges).pick({
   badgeId: true,
 });
 
+export const insertChallengeSchema = createInsertSchema(challenges).pick({
+  title: true,
+  description: true,
+  points: true,
+  category: true,
+  week: true,
+  isActive: true,
+  startDate: true,
+  endDate: true,
+});
+
 export const insertChallengeSubmissionSchema = createInsertSchema(userChallengeSubmissions).pick({
   userId: true,
   challengeId: true,
-  imageUrl: true,
-  description: true,
+  photoUrl: true,
+  caption: true,
 });
 
 export const insertQuizResultSchema = createInsertSchema(userQuizResults).pick({
@@ -172,6 +214,13 @@ export const insertModuleProgressSchema = createInsertSchema(userModuleProgress)
   unlockedModules: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).pick({
+  username: true,
+  password: true,
+  fullName: true,
+  role: true,
+});
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -185,9 +234,13 @@ export type InsertBadge = z.infer<typeof insertBadgeSchema>;
 export type Badge = typeof badges.$inferSelect;
 export type InsertUserBadge = z.infer<typeof insertUserBadgeSchema>;
 export type UserBadge = typeof userBadges.$inferSelect;
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+export type Challenge = typeof challenges.$inferSelect;
 export type InsertChallengeSubmission = z.infer<typeof insertChallengeSubmissionSchema>;
 export type ChallengeSubmission = typeof userChallengeSubmissions.$inferSelect;
 export type InsertQuizResult = z.infer<typeof insertQuizResultSchema>;
 export type QuizResult = typeof userQuizResults.$inferSelect;
 export type InsertModuleProgress = z.infer<typeof insertModuleProgressSchema>;
 export type ModuleProgress = typeof userModuleProgress.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;

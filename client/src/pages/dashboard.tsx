@@ -6,7 +6,7 @@ import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { useLocation } from 'wouter';
-import { Zap, BookOpen, Trophy, Users, Target, Star, Lock, ChevronRight, TrendingUp, Award, Calendar } from 'lucide-react';
+import { Zap, BookOpen, Trophy, Users, Target, Star, Lock, ChevronRight, TrendingUp, Award, Calendar, Camera, Upload, Eye, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 interface StudentProfile {
   id: string;
@@ -21,6 +21,30 @@ interface StudentProfile {
   currentLevel: number;
   createdAt: string;
   updatedAt: string;
+}
+
+interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  points: number;
+  category: string;
+  week: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+interface ChallengeSubmission {
+  id: string;
+  challengeId: string;
+  userId: string;
+  photoUrl: string | null;
+  caption: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  pointsAwarded: number;
+  submittedAt: string;
+  reviewedAt: string | null;
+  feedback: string | null;
 }
 
 // Safe JSON parsing utility to prevent console errors
@@ -66,6 +90,9 @@ export default function DashboardPage() {
   const [moduleProgress, setModuleProgress] = useState<{ [key: string]: number }>({});
   const [unlockedModules, setUnlockedModules] = useState<string[]>(['module-1']);
   const [quizResults, setQuizResults] = useState<{ [key: string]: any }>({});
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  const [submissions, setSubmissions] = useState<ChallengeSubmission[]>([]);
+  const [challengesLoading, setChallengesLoading] = useState(true);
 
   // Check lesson completion for each module from database
   const checkModuleCompletion = async () => {
@@ -230,6 +257,34 @@ export default function DashboardPage() {
     }
   };
 
+  // Load challenges and user submissions
+  const loadChallenges = async () => {
+    if (!user) return;
+    
+    try {
+      setChallengesLoading(true);
+      
+      // Load active challenges
+      const challengesResponse = await fetch('/api/challenges?week=1&isActive=true');
+      if (challengesResponse.ok) {
+        const challengesData = await challengesResponse.json();
+        setChallenges(challengesData.challenges || []);
+      }
+      
+      // Load user submissions
+      const submissionsResponse = await fetch(`/api/submissions/user/${user.uid}`);
+      if (submissionsResponse.ok) {
+        const submissionsData = await submissionsResponse.json();
+        setSubmissions(submissionsData.submissions || []);
+      }
+      
+    } catch (error) {
+      console.error('Failed to load challenges:', error);
+    } finally {
+      setChallengesLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       setLocation('/signin');
@@ -239,6 +294,7 @@ export default function DashboardPage() {
     if (user) {
       loadProfile();
       checkModuleCompletion();
+      loadChallenges();
     }
   }, [user, authLoading, setLocation]);
 
@@ -404,7 +460,7 @@ export default function DashboardPage() {
               <div className="flex items-center space-x-2 mt-1">
                 <Zap className="w-4 h-4 text-yellow-500" />
                 <span className="text-2xl font-bold text-emerald-600 animate-pulse leaf-sway">
-                  {profile.ecoPoints + Object.values(quizResults).reduce((total: number, result: any) => total + (result.score || 0), 0)}
+                  {profile.ecoPoints}
                 </span>
                 <span className="text-sm text-gray-600">EcoPoints</span>
               </div>
@@ -505,7 +561,7 @@ export default function DashboardPage() {
                     <Target className="w-4 h-4 text-green-500" />
                     <span className="text-sm font-medium">Challenges</span>
                   </div>
-                  <span className="text-lg font-bold text-green-600">0</span>
+                  <span className="text-lg font-bold text-green-600">{submissions.filter(s => s.status === 'approved').length}</span>
                 </div>
                 <div className="flex items-center justify-between p-2 bg-orange-50 rounded-lg">
                   <div className="flex items-center space-x-2">
@@ -842,6 +898,160 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Photo Challenges Section */}
+        <Card className="bg-white/80 backdrop-blur-sm border-orange-100 mb-8">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-orange-700 flex items-center space-x-2">
+              <Camera className="w-6 h-6" />
+              <span>Photo Challenges</span>
+              <Badge className="bg-orange-500 text-white">Week 1</Badge>
+            </CardTitle>
+            <p className="text-gray-600">Take photos of your eco-friendly actions and earn EcoPoints!</p>
+          </CardHeader>
+          <CardContent>
+            {challengesLoading ? (
+              <div className="text-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent mx-auto"></div>
+                <p className="mt-2 text-gray-500">Loading challenges...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {challenges.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Camera className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No challenges available at the moment.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {challenges.slice(0, 6).map((challenge) => {
+                      const userSubmission = submissions.find(s => s.challengeId === challenge.id);
+                      const isSubmitted = !!userSubmission;
+                      const isApproved = userSubmission?.status === 'approved';
+                      const isPending = userSubmission?.status === 'pending';
+                      const isRejected = userSubmission?.status === 'rejected';
+                      
+                      return (
+                        <Card key={challenge.id} className={`border-2 transition-all duration-300 hover:shadow-lg ${
+                          isApproved ? 'border-green-200 bg-green-50' :
+                          isPending ? 'border-yellow-200 bg-yellow-50' :
+                          isRejected ? 'border-red-200 bg-red-50' :
+                          'border-orange-200 bg-orange-50 hover:border-orange-300'
+                        }`}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge className={`text-xs ${
+                                isApproved ? 'bg-green-500' :
+                                isPending ? 'bg-yellow-500' :
+                                isRejected ? 'bg-red-500' :
+                                'bg-orange-500'
+                              }`}>
+                                {isApproved ? 'Completed' :
+                                 isPending ? 'Under Review' :
+                                 isRejected ? 'Rejected' :
+                                 'Available'}
+                              </Badge>
+                              <div className="flex items-center space-x-1 text-orange-600">
+                                <Zap className="w-4 h-4" />
+                                <span className="text-sm font-bold">{challenge.points}</span>
+                              </div>
+                            </div>
+                            <CardTitle className="text-lg text-gray-800 leading-tight">{challenge.title}</CardTitle>
+                            <p className="text-sm text-gray-600 mb-2">
+                              <strong>{challenge.category}</strong>
+                            </p>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-gray-700 mb-4 leading-relaxed">{challenge.description}</p>
+                            
+                            {/* Submission Status */}
+                            {isSubmitted && (
+                              <div className={`p-3 rounded-lg mb-4 border ${
+                                isApproved ? 'bg-green-100 border-green-200' :
+                                isPending ? 'bg-yellow-100 border-yellow-200' :
+                                'bg-red-100 border-red-200'
+                              }`}>
+                                <div className="flex items-center space-x-2 mb-2">
+                                  {isApproved && <CheckCircle className="w-4 h-4 text-green-600" />}
+                                  {isPending && <Clock className="w-4 h-4 text-yellow-600" />}
+                                  {isRejected && <XCircle className="w-4 h-4 text-red-600" />}
+                                  <span className={`text-sm font-medium ${
+                                    isApproved ? 'text-green-800' :
+                                    isPending ? 'text-yellow-800' :
+                                    'text-red-800'
+                                  }`}>
+                                    {isApproved ? `Approved! +${userSubmission.pointsAwarded} points` :
+                                     isPending ? 'Waiting for review...' :
+                                     'Try again with a different photo'}
+                                  </span>
+                                </div>
+                                {userSubmission.caption && (
+                                  <p className="text-xs text-gray-600 italic">"${userSubmission.caption}"</p>
+                                )}
+                                {userSubmission.feedback && isRejected && (
+                                  <p className="text-xs text-red-700 mt-1">Feedback: {userSubmission.feedback}</p>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Action Buttons */}
+                            <div className="space-y-2">
+                              {!isSubmitted ? (
+                                <Button 
+                                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                                  onClick={() => setLocation(`/challenges/${challenge.id}`)}
+                                >
+                                  <Upload className="w-4 h-4 mr-2" />
+                                  Submit Photo
+                                </Button>
+                              ) : (
+                                <div className="space-y-2">
+                                  {userSubmission.photoUrl && (
+                                    <Button 
+                                      variant="outline"
+                                      className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+                                      onClick={() => window.open(userSubmission.photoUrl!, '_blank')}
+                                    >
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      View Submission
+                                    </Button>
+                                  )}
+                                  {isRejected && (
+                                    <Button 
+                                      className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                                      onClick={() => setLocation(`/challenges/${challenge.id}`)}
+                                    >
+                                      <Upload className="w-4 h-4 mr-2" />
+                                      Submit New Photo
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                {/* View All Challenges Button */}
+                {challenges.length > 6 && (
+                  <div className="text-center pt-4">
+                    <Button 
+                      variant="outline"
+                      className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                      onClick={() => setLocation('/challenges')}
+                    >
+                      View All {challenges.length} Challenges
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Leaderboard & Community */}
         <div className="grid gap-6 md:grid-cols-3">
           {/* Student Profile Card */}
@@ -918,7 +1128,7 @@ export default function DashboardPage() {
                   <div className="flex-1">
                     <div className="font-semibold text-emerald-800">{profile.fullName} (You)</div>
                     <div className="text-sm text-emerald-600">
-                      {profile.ecoPoints + Object.values(quizResults).reduce((total: number, result: any) => total + (result.score || 0), 0)} EcoPoints
+                      {profile.ecoPoints} EcoPoints
                     </div>
                   </div>
                   <div className="text-sm font-medium text-emerald-600">#12</div>

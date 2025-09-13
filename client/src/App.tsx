@@ -12,6 +12,10 @@ import ProfileSetupPage from "@/pages/profile-setup";
 import DashboardPage from "@/pages/dashboard";
 import LessonPage from "./pages/lesson";
 import QuizPage from "./pages/quiz";
+import ChallengeSubmissionPage from "./pages/challenge-submission";
+import ChallengesPage from "./pages/challenges";
+import AdminPage from "./pages/admin";
+import AdminLoginPage from "./pages/admin-login";
 
 function Router() {
   return (
@@ -24,6 +28,10 @@ function Router() {
       <Route path="/lesson/:moduleId" component={LessonPage} />
       <Route path="/lesson/:moduleId/section/:sectionId" component={LessonPage} />
       <Route path="/quiz/:moduleId" component={QuizPage} />
+      <Route path="/challenges" component={ChallengesPage} />
+      <Route path="/challenges/:challengeId" component={ChallengeSubmissionPage} />
+      <Route path="/admin/login" component={AdminLoginPage} />
+      <Route path="/admin" component={AdminPage} />
       <Route component={NotFound} />
     </Switch>
   );

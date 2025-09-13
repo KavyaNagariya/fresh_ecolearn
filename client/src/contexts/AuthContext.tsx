@@ -126,19 +126,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(user);
       
       if (user) {
-        // User is signed in, check if they have a profile
-        const { hasProfile, profile } = await checkUserProfile(user);
+        // Check current route to avoid unnecessary redirects
+        const currentPath = window.location.pathname;
         
-        if (hasProfile && profile) {
-          // User has a profile, redirect to dashboard
-          console.log('User has profile, redirecting to dashboard');
-          // Store profile data in localStorage with user-specific key safely
-          safeSetLocalStorage(`ecolearn_profile_${user.uid}`, profile);
-          setLocation('/dashboard');
-        } else {
-          // User doesn't have a profile, redirect to profile setup
-          console.log('User needs to complete profile setup');
-          setLocation('/profile-setup');
+        // Only redirect if not already on dashboard or profile-setup
+        if (currentPath !== '/dashboard' && currentPath !== '/profile-setup') {
+          // User is signed in, check if they have a profile
+          const { hasProfile, profile } = await checkUserProfile(user);
+          
+          if (hasProfile && profile) {
+            // User has a profile, redirect to dashboard
+            console.log('User has profile, redirecting to dashboard');
+            // Store profile data in localStorage with user-specific key safely
+            safeSetLocalStorage(`ecolearn_profile_${user.uid}`, profile);
+            setLocation('/dashboard');
+          } else {
+            // User doesn't have a profile, redirect to profile setup
+            console.log('User needs to complete profile setup');
+            setLocation('/profile-setup');
+          }
+        } else if (currentPath === '/dashboard') {
+          // If already on dashboard, just ensure profile is cached
+          const { hasProfile, profile } = await checkUserProfile(user);
+          if (hasProfile && profile) {
+            safeSetLocalStorage(`ecolearn_profile_${user.uid}`, profile);
+          }
         }
       } else {
         // User is signed out

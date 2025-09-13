@@ -10,19 +10,21 @@ import {
   type UserLessonProgress, type InsertUserLessonProgress,
   type Badge, type InsertBadge,
   type UserBadge, type InsertUserBadge,
+  type Challenge, type InsertChallenge,
   type ChallengeSubmission, type InsertChallengeSubmission,
   type QuizResult, type InsertQuizResult,
-  type ModuleProgress, type InsertModuleProgress
+  type ModuleProgress, type InsertModuleProgress,
+  type AdminUser, type InsertAdminUser
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { 
   users, contacts, studentProfiles, userLessonProgress, 
-  badges, userBadges, userChallengeSubmissions,
-  userQuizResults, userModuleProgress
+  badges, userBadges, challenges, userChallengeSubmissions,
+  userQuizResults, userModuleProgress, adminUsers
 } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Basic user operations
@@ -53,8 +55,17 @@ export interface IStorage {
   getUserBadges(userId: string): Promise<UserBadge[]>;
   
   // Challenge operations
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  getChallenge(challengeId: string): Promise<Challenge | undefined>;
+  getChallenges(filters?: { week?: number; category?: string; isActive?: boolean }): Promise<Challenge[]>;
+  updateChallenge(challengeId: string, updates: Partial<Challenge>): Promise<Challenge | undefined>;
   createChallengeSubmission(submission: InsertChallengeSubmission): Promise<ChallengeSubmission>;
-  getUserChallengeSubmissions(userId: string): Promise<ChallengeSubmission[]>;
+  getChallengeSubmission(userId: string, challengeId: string): Promise<ChallengeSubmission | undefined>;
+  getUserChallengeSubmissions(userId: string, status?: string): Promise<ChallengeSubmission[]>;
+  getChallengeSubmissions(challengeId: string, status?: string): Promise<ChallengeSubmission[]>;
+  getPendingSubmissions(): Promise<ChallengeSubmission[]>;
+  getApprovedSubmissions(options?: { limit?: number; offset?: number }): Promise<ChallengeSubmission[]>;
+  reviewChallengeSubmission(submissionId: string, review: { status: string; feedback?: string; reviewedBy?: string }): Promise<ChallengeSubmission | undefined>;
   
   // Quiz results operations
   createQuizResult(result: InsertQuizResult): Promise<QuizResult>;
@@ -72,7 +83,14 @@ export class PostgreSQLStorage implements IStorage {
   private db: ReturnType<typeof drizzle>;
 
   constructor(connectionString: string) {
-    const queryClient = postgres(connectionString);
+    const queryClient = postgres(connectionString, {
+      connect_timeout: 30,
+      idle_timeout: 60,
+      max_lifetime: 60 * 10,
+      max: 10,
+      ssl: 'require',
+      onnotice: () => {}, // Suppress notices
+    });
     this.db = drizzle(queryClient);
   }
 
@@ -217,16 +235,185 @@ export class PostgreSQLStorage implements IStorage {
   }
 
   // Challenge operations
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const result = await this.db.insert(challenges).values(challenge).returning();
+    return result[0];
+  }
+
+  async getChallenge(challengeId: string): Promise<Challenge | undefined> {
+    const result = await this.db.select().from(challenges).where(eq(challenges.id, challengeId));
+    return result[0];
+  }
+
+  async getChallenges(filters?: { week?: number; category?: string; isActive?: boolean }): Promise<Challenge[]> {
+    let query = this.db.select().from(challenges);
+    
+    if (filters) {
+      const conditions = [];
+      if (filters.week !== undefined) {
+        conditions.push(eq(challenges.week, filters.week));
+      }
+      if (filters.category) {
+        conditions.push(eq(challenges.category, filters.category));
+      }
+      if (filters.isActive !== undefined) {
+        conditions.push(eq(challenges.isActive, filters.isActive));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+      }
+    }
+    
+    return await query.orderBy(challenges.week, challenges.createdAt);
+  }
+
+  async updateChallenge(challengeId: string, updates: Partial<Challenge>): Promise<Challenge | undefined> {
+    const result = await this.db
+      .update(challenges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(challenges.id, challengeId))
+      .returning();
+    return result[0];
+  }
+
   async createChallengeSubmission(submission: InsertChallengeSubmission): Promise<ChallengeSubmission> {
     const result = await this.db.insert(userChallengeSubmissions).values(submission).returning();
     return result[0];
   }
 
-  async getUserChallengeSubmissions(userId: string): Promise<ChallengeSubmission[]> {
-    return await this.db
+  async getChallengeSubmission(userId: string, challengeId: string): Promise<ChallengeSubmission | undefined> {
+    const result = await this.db
+      .select()
+      .from(userChallengeSubmissions)
+      .where(
+        and(
+          eq(userChallengeSubmissions.userId, userId),
+          eq(userChallengeSubmissions.challengeId, challengeId)
+        )
+      );
+    return result[0];
+  }
+
+  async getUserChallengeSubmissions(userId: string, status?: string): Promise<ChallengeSubmission[]> {
+    let query = this.db
       .select()
       .from(userChallengeSubmissions)
       .where(eq(userChallengeSubmissions.userId, userId));
+    
+    if (status) {
+      query = query.where(
+        and(
+          eq(userChallengeSubmissions.userId, userId),
+          eq(userChallengeSubmissions.status, status)
+        )
+      ) as any;
+    }
+    
+    return await query.orderBy(desc(userChallengeSubmissions.submittedAt));
+  }
+
+  async getChallengeSubmissions(challengeId: string, status?: string): Promise<ChallengeSubmission[]> {
+    let query = this.db
+      .select()
+      .from(userChallengeSubmissions)
+      .where(eq(userChallengeSubmissions.challengeId, challengeId));
+    
+    if (status) {
+      query = query.where(
+        and(
+          eq(userChallengeSubmissions.challengeId, challengeId),
+          eq(userChallengeSubmissions.status, status)
+        )
+      ) as any;
+    }
+    
+    return await query.orderBy(desc(userChallengeSubmissions.submittedAt));
+  }
+
+  async getPendingSubmissions(): Promise<ChallengeSubmission[]> {
+    return await this.db
+      .select()
+      .from(userChallengeSubmissions)
+      .where(eq(userChallengeSubmissions.status, 'pending'))
+      .orderBy(userChallengeSubmissions.submittedAt);
+  }
+
+  async getApprovedSubmissions(options?: { limit?: number; offset?: number }): Promise<ChallengeSubmission[]> {
+    let query = this.db
+      .select()
+      .from(userChallengeSubmissions)
+      .where(eq(userChallengeSubmissions.status, 'approved'))
+      .orderBy(desc(userChallengeSubmissions.reviewedAt));
+    
+    if (options?.limit) {
+      query = query.limit(options.limit) as any;
+    }
+    
+    if (options?.offset) {
+      query = query.offset(options.offset) as any;
+    }
+    
+    return await query;
+  }
+
+  async reviewChallengeSubmission(
+    submissionId: string, 
+    review: { status: string; feedback?: string; reviewedBy?: string }
+  ): Promise<ChallengeSubmission | undefined> {
+    const { status, feedback, reviewedBy } = review;
+    
+    // Get the submission and associated challenge to calculate points
+    const submission = await this.db
+      .select()
+      .from(userChallengeSubmissions)
+      .where(eq(userChallengeSubmissions.id, submissionId));
+    
+    if (!submission[0]) {
+      return undefined;
+    }
+    
+    let pointsAwarded = 0;
+    
+    if (status === 'approved') {
+      // Get challenge points
+      const challenge = await this.getChallenge(submission[0].challengeId);
+      if (challenge) {
+        pointsAwarded = challenge.points;
+        
+        // First get the current ecoPoints value
+        const userProfile = await this.db
+          .select({ ecoPoints: studentProfiles.ecoPoints })
+          .from(studentProfiles)
+          .where(eq(studentProfiles.userId, submission[0].userId));
+        
+        if (userProfile[0]) {
+          // Update user's eco points
+          await this.db
+            .update(studentProfiles)
+            .set({ 
+              ecoPoints: userProfile[0].ecoPoints + pointsAwarded,
+              updatedAt: new Date()
+            })
+            .where(eq(studentProfiles.userId, submission[0].userId));
+        }
+      }
+    }
+    
+    // Update submission
+    const result = await this.db
+      .update(userChallengeSubmissions)
+      .set({
+        status,
+        feedback,
+        reviewedBy,
+        pointsAwarded,
+        reviewedAt: new Date()
+      })
+      .where(eq(userChallengeSubmissions.id, submissionId))
+      .returning();
+    
+    return result[0];
   }
   
   // Quiz results operations
@@ -315,6 +502,7 @@ export class MemStorage implements IStorage {
   private userLessonProgress: Map<string, UserLessonProgress> = new Map();
   private badges: Map<string, Badge> = new Map();
   private userBadges: Map<string, UserBadge> = new Map();
+  private challenges: Map<string, Challenge> = new Map();
   private challengeSubmissions: Map<string, ChallengeSubmission> = new Map();
   private quizResults: Map<string, QuizResult> = new Map();
   private moduleProgress: Map<string, ModuleProgress> = new Map();
@@ -478,21 +666,155 @@ export class MemStorage implements IStorage {
     return Array.from(this.userBadges.values()).filter(ub => ub.userId === userId);
   }
 
+  // Challenge operations
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const id = randomUUID();
+    const newChallenge: Challenge = {
+      ...challenge,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.challenges.set(id, newChallenge);
+    return newChallenge;
+  }
+
+  async getChallenge(challengeId: string): Promise<Challenge | undefined> {
+    return this.challenges.get(challengeId);
+  }
+
+  async getChallenges(filters?: { week?: number; category?: string; isActive?: boolean }): Promise<Challenge[]> {
+    let challenges = Array.from(this.challenges.values());
+    
+    if (filters) {
+      if (filters.week !== undefined) {
+        challenges = challenges.filter(c => c.week === filters.week);
+      }
+      if (filters.category) {
+        challenges = challenges.filter(c => c.category === filters.category);
+      }
+      if (filters.isActive !== undefined) {
+        challenges = challenges.filter(c => c.isActive === filters.isActive);
+      }
+    }
+    
+    return challenges.sort((a, b) => a.week - b.week || a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async updateChallenge(challengeId: string, updates: Partial<Challenge>): Promise<Challenge | undefined> {
+    const challenge = this.challenges.get(challengeId);
+    if (challenge) {
+      const updated = { ...challenge, ...updates, updatedAt: new Date() };
+      this.challenges.set(challengeId, updated);
+      return updated;
+    }
+    return undefined;
+  }
+
   async createChallengeSubmission(submission: InsertChallengeSubmission): Promise<ChallengeSubmission> {
     const id = randomUUID();
     const newSubmission: ChallengeSubmission = {
       ...submission,
       id,
       status: "pending",
+      pointsAwarded: 0,
       submittedAt: new Date(),
-      reviewedAt: null
+      reviewedAt: null,
+      reviewedBy: null,
+      feedback: null
     };
     this.challengeSubmissions.set(id, newSubmission);
     return newSubmission;
   }
 
-  async getUserChallengeSubmissions(userId: string): Promise<ChallengeSubmission[]> {
-    return Array.from(this.challengeSubmissions.values()).filter(cs => cs.userId === userId);
+  async getChallengeSubmission(userId: string, challengeId: string): Promise<ChallengeSubmission | undefined> {
+    return Array.from(this.challengeSubmissions.values())
+      .find(cs => cs.userId === userId && cs.challengeId === challengeId);
+  }
+
+  async getUserChallengeSubmissions(userId: string, status?: string): Promise<ChallengeSubmission[]> {
+    let submissions = Array.from(this.challengeSubmissions.values())
+      .filter(cs => cs.userId === userId);
+    
+    if (status) {
+      submissions = submissions.filter(cs => cs.status === status);
+    }
+    
+    return submissions.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+  }
+
+  async getChallengeSubmissions(challengeId: string, status?: string): Promise<ChallengeSubmission[]> {
+    let submissions = Array.from(this.challengeSubmissions.values())
+      .filter(cs => cs.challengeId === challengeId);
+    
+    if (status) {
+      submissions = submissions.filter(cs => cs.status === status);
+    }
+    
+    return submissions.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+  }
+
+  async getPendingSubmissions(): Promise<ChallengeSubmission[]> {
+    return Array.from(this.challengeSubmissions.values())
+      .filter(cs => cs.status === 'pending')
+      .sort((a, b) => a.submittedAt.getTime() - b.submittedAt.getTime());
+  }
+
+  async getApprovedSubmissions(options?: { limit?: number; offset?: number }): Promise<ChallengeSubmission[]> {
+    let submissions = Array.from(this.challengeSubmissions.values())
+      .filter(cs => cs.status === 'approved')
+      .sort((a, b) => (b.reviewedAt?.getTime() || 0) - (a.reviewedAt?.getTime() || 0));
+    
+    if (options?.offset) {
+      submissions = submissions.slice(options.offset);
+    }
+    
+    if (options?.limit) {
+      submissions = submissions.slice(0, options.limit);
+    }
+    
+    return submissions;
+  }
+
+  async reviewChallengeSubmission(
+    submissionId: string, 
+    review: { status: string; feedback?: string; reviewedBy?: string }
+  ): Promise<ChallengeSubmission | undefined> {
+    const submission = this.challengeSubmissions.get(submissionId);
+    if (!submission) {
+      return undefined;
+    }
+    
+    let pointsAwarded = 0;
+    
+    if (review.status === 'approved') {
+      // Get challenge points
+      const challenge = this.challenges.get(submission.challengeId);
+      if (challenge) {
+        pointsAwarded = challenge.points;
+        
+        // Update user's eco points
+        const profile = await this.getStudentProfile(submission.userId);
+        if (profile) {
+          await this.updateStudentProfile(submission.userId, {
+            ecoPoints: profile.ecoPoints + pointsAwarded
+          });
+        }
+      }
+    }
+    
+    // Update submission
+    const updated: ChallengeSubmission = {
+      ...submission,
+      status: review.status,
+      feedback: review.feedback,
+      reviewedBy: review.reviewedBy,
+      pointsAwarded,
+      reviewedAt: new Date()
+    };
+    
+    this.challengeSubmissions.set(submissionId, updated);
+    return updated;
   }
   
   // Quiz results operations
@@ -565,9 +887,15 @@ function createStorage(): IStorage {
   const databaseUrl = process.env.DATABASE_URL;
 
   if (useDatabase && databaseUrl) {
-    console.log('🗄️ Using PostgreSQL database storage');
-    console.log('📍 Connected to:', databaseUrl.split('@')[1]?.split('/')[0] || 'database');
-    return new PostgreSQLStorage(databaseUrl);
+    try {
+      console.log('🗄️ Using PostgreSQL database storage');
+      console.log('📍 Connected to:', databaseUrl.split('@')[1]?.split('/')[0] || 'database');
+      return new PostgreSQLStorage(databaseUrl);
+    } catch (error) {
+      console.error('❌ Failed to connect to PostgreSQL, falling back to in-memory storage:', error);
+      console.log('⚠️  WARNING: Using in-memory storage (data will be lost on restart)');
+      return new MemStorage();
+    }
   } else {
     console.log('⚠️  WARNING: Using in-memory storage (data will be lost on restart)');
     console.log('🔧 To use shared database:');
