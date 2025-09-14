@@ -1,5 +1,4 @@
 # 🌱 EcoLearn - Gamified Environmental Education Platform
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://reactjs.org/)
@@ -45,130 +44,207 @@ EcoLearn serves multiple stakeholders including students, teachers, schools, and
 
 ## 🏗️ System Architecture
 
-### Frontend Architecture
-- **React 18** with TypeScript for type-safe component development
-- **Vite** as the build tool and development server for fast hot module replacement
-- **Wouter** for lightweight client-side routing
-- **TanStack Query** for server state management, caching, and data synchronization
-- **Shadcn/ui** component library built on Radix UI primitives for accessible, customizable UI components
-- **Tailwind CSS** for utility-first styling with CSS custom properties for theming
-- **React Hook Form** with Zod validation for type-safe form handling
-
-### Backend Architecture
-- **Express.js** server with TypeScript for API endpoints
-- **Modular route registration** pattern with centralized server setup
-- **Drizzle ORM** for type-safe database operations and schema management
-- **PostgreSQL** as the primary database with NeonDB cloud hosting
-- **Cloudinary** integration for image upload and management
-- **Comprehensive error handling** with structured error responses
-
-### Database Design
-- **PostgreSQL** with Drizzle ORM for type-safe operations
-- **NeonDB** cloud hosting for shared team development
-- **Comprehensive schema** covering users, profiles, lessons, challenges, submissions, and badges
-- **Data validation** with Zod schemas for type safety
-
 graph TD
-    A[User] -->|Authenticates| B[Firebase Auth]
-    B --> C[React Frontend]
-    C -->|API Calls| D[Express.js Backend]
-    D -->|Database Queries| E[PostgreSQL Database]
-    D -->|Image Upload| F[Cloudinary Storage]
-    
-    subgraph Frontend
-        C --> G[Landing Page]
-        C --> H[Dashboard]
-        C --> I[Learning Modules]
-        C --> J[Photo Challenges]
-        C --> K[Profile Management]
-    end
-    
-    subgraph Backend
-        D --> L[Authentication Routes]
-        D --> M[Learning Module APIs]
-        D --> N[Challenge Management]
-        D --> O[Admin Panel APIs]
-        D --> P[Contact System]
-    end
-    
-    subgraph Database
-        E --> Q[Users Table]
-        E --> R[Student Profiles]
-        E --> S[Lessons & Quizzes]
-        E --> T[Challenges & Submissions]
-        E --> U[Badges & Achievements]
-    end
+A[User] -->|Authenticates| B[Firebase A
+th] B --> C[React F
+ontend] C -->|API Calls| D[Express
+js Backend] D -->|Database Queries| E[Post
 
-    flowchart TD
-    START([User Visits Platform]) --> AUTH{Authenticated?}
-    AUTH -->|No| LOGIN[Login/Register]
-    AUTH -->|Yes| DASH[Dashboard]
-    LOGIN --> PROFILE[Complete Profile]
-    PROFILE --> DASH
-    
-    DASH --> MODULES[Learning Modules]
-    DASH --> CHALLENGES[Photo Challenges]
-    DASH --> LEADERBOARD[Leaderboards]
-    
-    MODULES --> QUIZ[Take Quiz]
-    QUIZ --> PASS{Score >= 30?}
-    PASS -->|Yes| UNLOCK[Unlock Next Module]
-    PASS -->|No| RETRY[Retry Quiz]
-    RETRY --> QUIZ
-    UNLOCK --> BADGE[Earn Badge]
-    
-    CHALLENGES --> SUBMIT[Submit Photo]
-    SUBMIT --> REVIEW[Admin Review]
-    REVIEW --> APPROVE{Approved?}
-    APPROVE -->|Yes| POINTS[Earn Points]
-    APPROVE -->|No| RESUBMIT[Can Resubmit]
-    RESUBMIT --> SUBMIT
-    POINTS --> BADGE
-    
-    BADGE --> DASH
+subgraph Frontend
+    C --> G[Landing Page]
+    C --> H[Dashboard]
+    C --> I[Learning Modules]
+    C --> J[Photo Challenges]
+    C --> K[Profile Management]
+end
 
-    
+subgraph Backend
+    D --> L[Authentication Routes]
+    D --> M[Learning Module APIs]
+    D --> N[Challenge Management]
+    D --> O[Admin Panel APIs]
+    D --> P[Contact System]
+end
+
+subgraph Database
+    E --> Q[Users Table]
+    E --> R[Student Profiles]
+    E --> S[Lessons & Quizzes]
+    E --> T[Challenges & Submissions]
+    E --> U[Badges & Achievements]
+end
+
+
+## 🔄 User Flow Diagram
+
+flowchart TD
+START([User Visits Platform]) --> AUTH{Authenticat
+d?} AUTH -->|No| LOGIN[Login/R
+gister] AUTH -->|Yes| DAS
+[Dashboard] LOGIN --> PROFILE[C
+
+DASH --> MODULES[Learning Modules]
+DASH --> CHALLENGES[Photo Challenges]
+DASH --> LEADERBOARD[Leaderboards]
+
+MODULES --> QUIZ[Take Quiz]
+QUIZ --> PASS{Score >= 30?}
+PASS -->|Yes| UNLOCK[Unlock Next Module]
+PASS -->|No| RETRY[Retry Quiz]
+RETRY --> QUIZ
+UNLOCK --> BADGE[Earn Badge]
+
+CHALLENGES --> SUBMIT[Submit Photo]
+SUBMIT --> REVIEW[Admin Review]
+REVIEW --> APPROVE{Approved?}
+APPROVE -->|Yes| POINTS[Earn Points]
+APPROVE -->|No| RESUBMIT[Can Resubmit]
+RESUBMIT --> SUBMIT
+POINTS --> BADGE
+
+BADGE --> DASH
+
+
+## 🔐 Authentication Flow
+
 sequenceDiagram
-    participant U as User
-    participant F as Frontend
-    participant FB as Firebase Auth
-    participant B as Backend
-    participant DB as Database
-    
-    U->>F: Enter Credentials
-    F->>FB: Authentication Request
-    FB-->>F: Firebase Token
-    F->>B: API Request with Token
-    B->>FB: Verify Token
-    FB-->>B: Token Valid
-    B->>DB: Query User Data
-    DB-->>B: User Profile
-    B-->>F: User Data Response
-    F-->>U: Login Success
+participant U as User
+participant F as Frontend
+participant FB as Firebase Auth
+participant B as Backend
+participant DB as Database
+
+U->>F: Enter Credentials
+F->>FB: Authentication Request
+FB-->>F: Firebase Token
+F->>B: API Request with Token
+B->>FB: Verify Token
+FB-->>B: Token Valid
+B->>DB: Query User Data
+DB-->>B: User Profile
+B-->>F: User Data Response
+F-->>U: Login Success
+
+
+## 📊 Data Flow Architecture
 
 graph LR
-    subgraph Client Side
-        A[React Components] --> B[TanStack Query]
-        B --> C[API Client]
-    end
-    
-    subgraph Server Side
-        C -->|HTTP Requests| D[Express Routes]
-        D --> E[Middleware]
-        E --> F[Controllers]
-        F --> G[Drizzle ORM]
-        G --> H[PostgreSQL]
-    end
-    
-    subgraph External Services
-        F --> I[Firebase Auth]
-        F --> J[Cloudinary API]
-    end
-    
-    H --> G
-    G --> F
-    F --> D
-    D --> C
+subgraph Client Side
+A[React Components] --> B[TanStack Query]
+B --> C[API Client]
+end
+
+subgraph Server Side
+    C -->|HTTP Requests| D[Express Routes]
+    D --> E[Middleware]
+    E --> F[Controllers]
+    F --> G[Drizzle ORM]
+    G --> H[PostgreSQL]
+end
+
+subgraph External Services
+    F --> I[Firebase Auth]
+    F --> J[Cloudinary API]
+end
+
+H --> G
+G --> F
+F --> D
+D --> C
+
+
+## 🗄️ Database Schema
+
+erDiagram
+users {
+string id PK
+string email
+timestamp created_at
+}
+
+student_profiles {
+    string id PK
+    string user_id FK
+    string name
+    string school
+    string grade
+    int eco_points
+    int level
+}
+
+user_lesson_progress {
+    string id PK
+    string user_id FK
+    string lesson_id
+    boolean completed
+    timestamp completed_at
+}
+
+user_quiz_results {
+    string id PK
+    string user_id FK
+    string quiz_id
+    int score
+    timestamp taken_at
+}
+
+challenges {
+    string id PK
+    string title
+    string description
+    string category
+    int points
+    boolean active
+}
+
+user_challenge_submissions {
+    string id PK
+    string user_id FK
+    string challenge_id FK
+    string image_url
+    string caption
+    string status
+    timestamp submitted_at
+}
+
+badges {
+    string id PK
+    string name
+    string description
+    string icon_url
+    string criteria
+}
+
+user_badges {
+    string id PK
+    string user_id FK
+    string badge_id FK
+    timestamp earned_at
+}
+
+admin_users {
+    string id PK
+    string username
+    string password_hash
+    timestamp created_at
+}
+
+contacts {
+    string id PK
+    string name
+    string email
+    string message
+    timestamp submitted_at
+}
+
+users ||--|| student_profiles : "has"
+users ||--o{ user_lesson_progress : "completes"
+users ||--o{ user_quiz_results : "takes"
+users ||--o{ user_challenge_submissions : "submits"
+users ||--o{ user_badges : "earns"
+challenges ||--o{ user_challenge_submissions : "receives"
+badges ||--o{ user_badges : "awarded_as"
+
 
 
 ## 🚀 Getting Started
@@ -181,68 +257,44 @@ graph LR
 ### Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd project_ecolearn
-   ```
+
+git clone <repository-url>
+cd project_ecolearn
+
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+
+npm install
+
 
 3. **Set up environment variables**
-   ```bash
-   # Copy the example environment file
-   cp .env.example .env
-   ```
 
-4. **Configure database connection**
-   Open the `.env` file and add:
-   ```env
-   DATABASE_URL=postgresql://neondb_owner:npg_98LZvfqiecKO@ep-tiny-dream-a1p0bazy-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-   USE_DATABASE=true
-   ```
+Copy the example environment file
+cp .env.example .env
+
+
+4. **Configure database connection**  
+Open the `.env` file and add:
+DATABASE_URL=postgresql://neondb_owner:npg_98LZvfqiecKO@ep-tiny-dream-a1p0bazy-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+USE_DATABASE=true
+
 
 5. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+npm run dev
 
-6. **Verify database connection**
-   You should see:
-   ```
-   🗄️ Using PostgreSQL database storage
-   📍 Connected to: ep-tiny-dream-a1p0bazy-pooler.ap-southeast-1.aws.neon.tech
-   ```
+
+6. **Verify database connection**  
+You should see:
+🗄️ Using PostgreSQL database storage
+📍 Connected to: ep-tiny-dream-a1p0bazy-pooler.ap-southeast-1.aws.neon.tech
+
 
 ### Available Scripts
-
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run check` - TypeScript type checking
 - `npm run db:push` - Push database schema changes
-
-## 📚 Educational Content
-
-### Module Structure
-The platform includes 5 comprehensive educational modules:
-
-1. **Module 1: Climate Change Fundamentals**
-   - Greenhouse gases and their effects
-   - Global warming causes and impacts
-   - Climate vs. weather concepts
-   - Scientific data collection methods
-   - Individual action strategies
-
-2. **Module 2-5**: Additional modules covering Water Conservation, Waste Management, Energy Efficiency, and Biodiversity
-
-### Assessment System
-- **10-question quizzes** for each module
-- **30 points minimum** required to unlock next module
-- **Instant feedback** with explanations
-- **Progress tracking** across all modules
 
 ## 🎮 Challenge System
 
@@ -273,46 +325,30 @@ The platform includes 5 comprehensive educational modules:
 - **Manage challenges** and educational content
 
 ### Default Admin Credentials
-```
 Username: admin
 Password: admin123
 
 Username: ecolearn_admin
 Password: ecolearn2024
-```
 
-## 🗄️ Database Schema
-
-### Core Tables
-- **users**: Basic user authentication
-- **student_profiles**: Student information and eco-points
-- **user_lesson_progress**: Lesson completion tracking
-- **user_quiz_results**: Quiz scores and results
-- **challenges**: Challenge definitions and metadata
-- **user_challenge_submissions**: Photo submissions and reviews
-- **badges**: Achievement badge definitions
-- **user_badges**: User badge awards
-- **contacts**: Contact form submissions
-- **admin_users**: Admin authentication
 
 ## 🔧 Configuration
 
 ### Environment Variables
-```env
-# Database
+Database
 DATABASE_URL=your_postgresql_connection_string
 USE_DATABASE=true
 
-# Firebase (for authentication)
+Firebase (for authentication)
 FIREBASE_API_KEY=your_firebase_api_key
 FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 FIREBASE_PROJECT_ID=your_project_id
 
-# Cloudinary (for image uploads)
+Cloudinary (for image uploads)
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-```
+
 
 ### Firebase Setup
 1. Create a Firebase project
@@ -329,10 +365,9 @@ CLOUDINARY_API_SECRET=your_api_secret
 ## 🚀 Deployment
 
 ### Production Build
-```bash
 npm run build
 npm run start
-```
+
 
 ### Environment Setup
 - Ensure all environment variables are configured
@@ -354,24 +389,23 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🏆 Hackathon Information
 
-**Event**: Smart India Hackathon 2025
-**Category**: Environmental Education
+**Event**: Smart India Hackathon 2025  
+**Category**: Environmental Education  
 **Focus**: Gamified learning for sustainable development
 
 ## 📞 Support
 
-For support and questions:
-- Create an issue in the repository
-- Contact the development team
+For support and questions:  
+- Create an issue in the repository  
+- Contact the development team  
 - Check the [SETUP.md](SETUP.md) file for detailed setup instructions
 
 ## 🙏 Acknowledgments
 
-- Smart India Hackathon 2025 organizers
-- Open source community for the amazing tools and libraries
-- Environmental education experts for content guidance
+- Smart India Hackathon 2025 organizers  
+- Open source community for the amazing tools and libraries  
+- Environmental education experts for content guidance  
 - Beta testers and early adopters
 
 ---
-
 **Made with ❤️ for a sustainable future**
