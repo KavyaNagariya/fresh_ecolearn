@@ -68,6 +68,109 @@ EcoLearn serves multiple stakeholders including students, teachers, schools, and
 - **Comprehensive schema** covering users, profiles, lessons, challenges, submissions, and badges
 - **Data validation** with Zod schemas for type safety
 
+graph TD
+    A[User] -->|Authenticates| B[Firebase Auth]
+    B --> C[React Frontend]
+    C -->|API Calls| D[Express.js Backend]
+    D -->|Database Queries| E[PostgreSQL Database]
+    D -->|Image Upload| F[Cloudinary Storage]
+    
+    subgraph Frontend
+        C --> G[Landing Page]
+        C --> H[Dashboard]
+        C --> I[Learning Modules]
+        C --> J[Photo Challenges]
+        C --> K[Profile Management]
+    end
+    
+    subgraph Backend
+        D --> L[Authentication Routes]
+        D --> M[Learning Module APIs]
+        D --> N[Challenge Management]
+        D --> O[Admin Panel APIs]
+        D --> P[Contact System]
+    end
+    
+    subgraph Database
+        E --> Q[Users Table]
+        E --> R[Student Profiles]
+        E --> S[Lessons & Quizzes]
+        E --> T[Challenges & Submissions]
+        E --> U[Badges & Achievements]
+    end
+
+    flowchart TD
+    START([User Visits Platform]) --> AUTH{Authenticated?}
+    AUTH -->|No| LOGIN[Login/Register]
+    AUTH -->|Yes| DASH[Dashboard]
+    LOGIN --> PROFILE[Complete Profile]
+    PROFILE --> DASH
+    
+    DASH --> MODULES[Learning Modules]
+    DASH --> CHALLENGES[Photo Challenges]
+    DASH --> LEADERBOARD[Leaderboards]
+    
+    MODULES --> QUIZ[Take Quiz]
+    QUIZ --> PASS{Score >= 30?}
+    PASS -->|Yes| UNLOCK[Unlock Next Module]
+    PASS -->|No| RETRY[Retry Quiz]
+    RETRY --> QUIZ
+    UNLOCK --> BADGE[Earn Badge]
+    
+    CHALLENGES --> SUBMIT[Submit Photo]
+    SUBMIT --> REVIEW[Admin Review]
+    REVIEW --> APPROVE{Approved?}
+    APPROVE -->|Yes| POINTS[Earn Points]
+    APPROVE -->|No| RESUBMIT[Can Resubmit]
+    RESUBMIT --> SUBMIT
+    POINTS --> BADGE
+    
+    BADGE --> DASH
+
+    
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant FB as Firebase Auth
+    participant B as Backend
+    participant DB as Database
+    
+    U->>F: Enter Credentials
+    F->>FB: Authentication Request
+    FB-->>F: Firebase Token
+    F->>B: API Request with Token
+    B->>FB: Verify Token
+    FB-->>B: Token Valid
+    B->>DB: Query User Data
+    DB-->>B: User Profile
+    B-->>F: User Data Response
+    F-->>U: Login Success
+
+graph LR
+    subgraph Client Side
+        A[React Components] --> B[TanStack Query]
+        B --> C[API Client]
+    end
+    
+    subgraph Server Side
+        C -->|HTTP Requests| D[Express Routes]
+        D --> E[Middleware]
+        E --> F[Controllers]
+        F --> G[Drizzle ORM]
+        G --> H[PostgreSQL]
+    end
+    
+    subgraph External Services
+        F --> I[Firebase Auth]
+        F --> J[Cloudinary API]
+    end
+    
+    H --> G
+    G --> F
+    F --> D
+    D --> C
+
+
 ## 🚀 Getting Started
 
 ### Prerequisites
