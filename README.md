@@ -44,208 +44,213 @@ EcoLearn serves multiple stakeholders including students, teachers, schools, and
 
 ## 🏗️ System Architecture
 
+```mermaid
 graph TD
-A[User] -->|Authenticates| B[Firebase A
-th] B --> C[React F
-ontend] C -->|API Calls| D[Express
-js Backend] D -->|Database Queries| E[Post
+    A[User] -->|Authenticates| B[Firebase Auth]
+    B --> C[React Frontend]
+    C -->|API Calls| D[Express.js Backend]
+    D -->|Database Queries| E[PostgreSQL]
 
-subgraph Frontend
-    C --> G[Landing Page]
-    C --> H[Dashboard]
-    C --> I[Learning Modules]
-    C --> J[Photo Challenges]
-    C --> K[Profile Management]
-end
+    subgraph Frontend
+        C --> G[Landing Page]
+        C --> H[Dashboard]
+        C --> I[Learning Modules]
+        C --> J[Photo Challenges]
+        C --> K[Profile Management]
+    end
 
-subgraph Backend
-    D --> L[Authentication Routes]
-    D --> M[Learning Module APIs]
-    D --> N[Challenge Management]
-    D --> O[Admin Panel APIs]
-    D --> P[Contact System]
-end
+    subgraph Backend
+        D --> L[Authentication Routes]
+        D --> M[Learning Module APIs]
+        D --> N[Challenge Management]
+        D --> O[Admin Panel APIs]
+        D --> P[Contact System]
+    end
 
-subgraph Database
-    E --> Q[Users Table]
-    E --> R[Student Profiles]
-    E --> S[Lessons & Quizzes]
-    E --> T[Challenges & Submissions]
-    E --> U[Badges & Achievements]
-end
-
+    subgraph Database
+        E --> Q[Users Table]
+        E --> R[Student Profiles]
+        E --> S[Lessons & Quizzes]
+        E --> T[Challenges & Submissions]
+        E --> U[Badges & Achievements]
+    end
+```
 
 ## 🔄 User Flow Diagram
 
+```mermaid
 flowchart TD
-START([User Visits Platform]) --> AUTH{Authenticat
-d?} AUTH -->|No| LOGIN[Login/R
-gister] AUTH -->|Yes| DAS
-[Dashboard] LOGIN --> PROFILE[C
+    START([User Visits Platform]) --> AUTH{Authenticated?}
+    AUTH -->|No| LOGIN[Login/Register]
+    AUTH -->|Yes| DASH[Dashboard]
+    LOGIN --> PROFILE[Complete Profile]
+    PROFILE --> DASH
 
-DASH --> MODULES[Learning Modules]
-DASH --> CHALLENGES[Photo Challenges]
-DASH --> LEADERBOARD[Leaderboards]
+    DASH --> MODULES[Learning Modules]
+    DASH --> CHALLENGES[Photo Challenges]
+    DASH --> LEADERBOARD[Leaderboards]
 
-MODULES --> QUIZ[Take Quiz]
-QUIZ --> PASS{Score >= 30?}
-PASS -->|Yes| UNLOCK[Unlock Next Module]
-PASS -->|No| RETRY[Retry Quiz]
-RETRY --> QUIZ
-UNLOCK --> BADGE[Earn Badge]
+    MODULES --> QUIZ[Take Quiz]
+    QUIZ --> PASS{Score >= 30?}
+    PASS -->|Yes| UNLOCK[Unlock Next Module]
+    PASS -->|No| RETRY[Retry Quiz]
+    RETRY --> QUIZ
+    UNLOCK --> BADGE[Earn Badge]
 
-CHALLENGES --> SUBMIT[Submit Photo]
-SUBMIT --> REVIEW[Admin Review]
-REVIEW --> APPROVE{Approved?}
-APPROVE -->|Yes| POINTS[Earn Points]
-APPROVE -->|No| RESUBMIT[Can Resubmit]
-RESUBMIT --> SUBMIT
-POINTS --> BADGE
+    CHALLENGES --> SUBMIT[Submit Photo]
+    SUBMIT --> REVIEW[Admin Review]
+    REVIEW --> APPROVE{Approved?}
+    APPROVE -->|Yes| POINTS[Earn Points]
+    APPROVE -->|No| RESUBMIT[Can Resubmit]
+    RESUBMIT --> SUBMIT
+    POINTS --> BADGE
 
-BADGE --> DASH
-
+    BADGE --> DASH
+```
 
 ## 🔐 Authentication Flow
 
+```mermaid
 sequenceDiagram
-participant U as User
-participant F as Frontend
-participant FB as Firebase Auth
-participant B as Backend
-participant DB as Database
+    participant U as User
+    participant F as Frontend
+    participant FB as Firebase Auth
+    participant B as Backend
+    participant DB as Database
 
-U->>F: Enter Credentials
-F->>FB: Authentication Request
-FB-->>F: Firebase Token
-F->>B: API Request with Token
-B->>FB: Verify Token
-FB-->>B: Token Valid
-B->>DB: Query User Data
-DB-->>B: User Profile
-B-->>F: User Data Response
-F-->>U: Login Success
-
+    U->>F: Enter Credentials
+    F->>FB: Authentication Request
+    FB-->>F: Firebase Token
+    F->>B: API Request with Token
+    B->>FB: Verify Token
+    FB-->>B: Token Valid
+    B->>DB: Query User Data
+    DB-->>B: User Profile
+    B-->>F: User Data Response
+    F-->>U: Login Success
+```
 
 ## 📊 Data Flow Architecture
 
+```mermaid
 graph LR
-subgraph Client Side
-A[React Components] --> B[TanStack Query]
-B --> C[API Client]
-end
+    subgraph "Client Side"
+        A[React Components] --> B[TanStack Query]
+        B --> C[API Client]
+    end
 
-subgraph Server Side
-    C -->|HTTP Requests| D[Express Routes]
-    D --> E[Middleware]
-    E --> F[Controllers]
-    F --> G[Drizzle ORM]
-    G --> H[PostgreSQL]
-end
+    subgraph "Server Side"
+        C -->|HTTP Requests| D[Express Routes]
+        D --> E[Middleware]
+        E --> F[Controllers]
+        F --> G[Drizzle ORM]
+        G --> H[PostgreSQL]
+    end
 
-subgraph External Services
-    F --> I[Firebase Auth]
-    F --> J[Cloudinary API]
-end
+    subgraph "External Services"
+        F --> I[Firebase Auth]
+        F --> J[Cloudinary API]
+    end
 
-H --> G
-G --> F
-F --> D
-D --> C
-
+    H --> G
+    G --> F
+    F --> D
+    D --> C
+```
 
 ## 🗄️ Database Schema
 
+```mermaid
 erDiagram
-users {
-string id PK
-string email
-timestamp created_at
-}
+    users {
+        string id PK
+        string email
+        timestamp created_at
+    }
 
-student_profiles {
-    string id PK
-    string user_id FK
-    string name
-    string school
-    string grade
-    int eco_points
-    int level
-}
+    student_profiles {
+        string id PK
+        string user_id FK
+        string name
+        string school
+        string grade
+        int eco_points
+        int level
+    }
 
-user_lesson_progress {
-    string id PK
-    string user_id FK
-    string lesson_id
-    boolean completed
-    timestamp completed_at
-}
+    user_lesson_progress {
+        string id PK
+        string user_id FK
+        string lesson_id
+        boolean completed
+        timestamp completed_at
+    }
 
-user_quiz_results {
-    string id PK
-    string user_id FK
-    string quiz_id
-    int score
-    timestamp taken_at
-}
+    user_quiz_results {
+        string id PK
+        string user_id FK
+        string quiz_id
+        int score
+        timestamp taken_at
+    }
 
-challenges {
-    string id PK
-    string title
-    string description
-    string category
-    int points
-    boolean active
-}
+    challenges {
+        string id PK
+        string title
+        string description
+        string category
+        int points
+        boolean active
+    }
 
-user_challenge_submissions {
-    string id PK
-    string user_id FK
-    string challenge_id FK
-    string image_url
-    string caption
-    string status
-    timestamp submitted_at
-}
+    user_challenge_submissions {
+        string id PK
+        string user_id FK
+        string challenge_id FK
+        string image_url
+        string caption
+        string status
+        timestamp submitted_at
+    }
 
-badges {
-    string id PK
-    string name
-    string description
-    string icon_url
-    string criteria
-}
+    badges {
+        string id PK
+        string name
+        string description
+        string icon_url
+        string criteria
+    }
 
-user_badges {
-    string id PK
-    string user_id FK
-    string badge_id FK
-    timestamp earned_at
-}
+    user_badges {
+        string id PK
+        string user_id FK
+        string badge_id FK
+        timestamp earned_at
+    }
 
-admin_users {
-    string id PK
-    string username
-    string password_hash
-    timestamp created_at
-}
+    admin_users {
+        string id PK
+        string username
+        string password_hash
+        timestamp created_at
+    }
 
-contacts {
-    string id PK
-    string name
-    string email
-    string message
-    timestamp submitted_at
-}
+    contacts {
+        string id PK
+        string name
+        string email
+        string message
+        timestamp submitted_at
+    }
 
-users ||--|| student_profiles : "has"
-users ||--o{ user_lesson_progress : "completes"
-users ||--o{ user_quiz_results : "takes"
-users ||--o{ user_challenge_submissions : "submits"
-users ||--o{ user_badges : "earns"
-challenges ||--o{ user_challenge_submissions : "receives"
-badges ||--o{ user_badges : "awarded_as"
-
-
+    users ||--|| student_profiles : "has"
+    users ||--o{ user_lesson_progress : "completes"
+    users ||--o{ user_quiz_results : "takes"
+    users ||--o{ user_challenge_submissions : "submits"
+    users ||--o{ user_badges : "earns"
+    challenges ||--o{ user_challenge_submissions : "receives"
+    badges ||--o{ user_badges : "awarded_as"
+```
 
 ## 🚀 Getting Started
 
@@ -257,37 +262,40 @@ badges ||--o{ user_badges : "awarded_as"
 ### Installation
 
 1. **Clone the repository**
-
+```bash
 git clone <repository-url>
 cd project_ecolearn
-
+```
 
 2. **Install dependencies**
-
+```bash
 npm install
-
+```
 
 3. **Set up environment variables**
-
-Copy the example environment file
+```bash
+# Copy the example environment file
 cp .env.example .env
-
+```
 
 4. **Configure database connection**  
 Open the `.env` file and add:
+```env
 DATABASE_URL=postgresql://neondb_owner:npg_98LZvfqiecKO@ep-tiny-dream-a1p0bazy-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 USE_DATABASE=true
-
+```
 
 5. **Start the development server**
+```bash
 npm run dev
-
+```
 
 6. **Verify database connection**  
 You should see:
+```
 🗄️ Using PostgreSQL database storage
 📍 Connected to: ep-tiny-dream-a1p0bazy-pooler.ap-southeast-1.aws.neon.tech
-
+```
 
 ### Available Scripts
 - `npm run dev` - Start development server
@@ -325,30 +333,32 @@ You should see:
 - **Manage challenges** and educational content
 
 ### Default Admin Credentials
+```
 Username: admin
 Password: admin123
 
 Username: ecolearn_admin
 Password: ecolearn2024
-
+```
 
 ## 🔧 Configuration
 
 ### Environment Variables
-Database
+```env
+# Database
 DATABASE_URL=your_postgresql_connection_string
 USE_DATABASE=true
 
-Firebase (for authentication)
+# Firebase (for authentication)
 FIREBASE_API_KEY=your_firebase_api_key
 FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 FIREBASE_PROJECT_ID=your_project_id
 
-Cloudinary (for image uploads)
+# Cloudinary (for image uploads)
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-
+```
 
 ### Firebase Setup
 1. Create a Firebase project
@@ -365,9 +375,10 @@ CLOUDINARY_API_SECRET=your_api_secret
 ## 🚀 Deployment
 
 ### Production Build
+```bash
 npm run build
 npm run start
-
+```
 
 ### Environment Setup
 - Ensure all environment variables are configured
