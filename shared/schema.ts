@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, integer, boolean, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -136,6 +136,26 @@ export const adminUsers = pgTable("admin_users", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Chat Sessions - Store chat sessions with user context
+export const chatSessions = pgTable("chat_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull(),
+  title: text("title").notNull().default("Eco Assistant Chat"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Chat Messages - Store individual messages with context
+export const chatMessages = pgTable("chat_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull(),
+  role: text("role").notNull(), // user or assistant
+  content: text("content").notNull(),
+  context: text("context"), // JSON string of context data (module, lesson, etc.)
+  moduleId: uuid("module_id"), // Optional module ID for context
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+});
+
 // Insert Schemas for validation
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -221,6 +241,10 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).pick({
   role: true,
 });
 
+export const insertChatSessionSchema = createInsertSchema(chatSessions);
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages);
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -244,3 +268,7 @@ export type InsertModuleProgress = z.infer<typeof insertModuleProgressSchema>;
 export type ModuleProgress = typeof userModuleProgress.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;

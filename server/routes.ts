@@ -5,8 +5,12 @@ import { insertContactSchema, insertStudentProfileSchema, insertUserSchema, inse
 import { z } from "zod";
 import multer from "multer";
 import { uploadToCloudinary } from "./cloudinary";
+import { registerChatRoutes } from "./chat-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register chat routes
+  await registerChatRoutes(app);
+  
   // Contact form submission endpoint
   app.post("/api/contacts", async (req, res) => {
     try {

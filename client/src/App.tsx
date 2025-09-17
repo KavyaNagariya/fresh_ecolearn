@@ -4,6 +4,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ChatProvider } from "@/contexts/ChatContext";
+import { ChatWidget } from "@/components/chat/ChatWidget";
+import { useChatContext } from "@/hooks/useChatContext";
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
 import SignUpPage from "@/pages/signup";
@@ -16,24 +19,32 @@ import ChallengeSubmissionPage from "./pages/challenge-submission";
 import ChallengesPage from "./pages/challenges";
 import AdminPage from "./pages/admin";
 import AdminLoginPage from "./pages/admin-login";
+import ChatPage from "./pages/chat";
 
-function Router() {
+// Wrapper component to provide chat context
+function AppContent() {
+  const chatContext = useChatContext();
+  
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/signup" component={SignUpPage} />
-      <Route path="/signin" component={SignInPage} />
-      <Route path="/profile-setup" component={ProfileSetupPage} />
-      <Route path="/dashboard" component={DashboardPage} />
-      <Route path="/lesson/:moduleId" component={LessonPage} />
-      <Route path="/lesson/:moduleId/section/:sectionId" component={LessonPage} />
-      <Route path="/quiz/:moduleId" component={QuizPage} />
-      <Route path="/challenges" component={ChallengesPage} />
-      <Route path="/challenges/:challengeId" component={ChallengeSubmissionPage} />
-      <Route path="/admin/login" component={AdminLoginPage} />
-      <Route path="/admin" component={AdminPage} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/signup" component={SignUpPage} />
+        <Route path="/signin" component={SignInPage} />
+        <Route path="/profile-setup" component={ProfileSetupPage} />
+        <Route path="/dashboard" component={DashboardPage} />
+        <Route path="/lesson/:moduleId" component={LessonPage} />
+        <Route path="/lesson/:moduleId/section/:sectionId" component={LessonPage} />
+        <Route path="/quiz/:moduleId" component={QuizPage} />
+        <Route path="/challenges" component={ChallengesPage} />
+        <Route path="/challenges/:challengeId" component={ChallengeSubmissionPage} />
+        <Route path="/chat" component={ChatPage} />
+        <Route path="/admin/login" component={AdminLoginPage} />
+        <Route path="/admin" component={AdminPage} />
+        <Route component={NotFound} />
+      </Switch>
+      <ChatWidget context={chatContext} />
+    </>
   );
 }
 
@@ -42,8 +53,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <Toaster />
-          <Router />
+          <ChatProvider>
+            <Toaster />
+            <AppContent />
+          </ChatProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
